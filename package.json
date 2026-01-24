@@ -1,0 +1,20 @@
+{
+  "name": "module-tsx",
+  "version": "0.0.0",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "dist/index.mjs",
+  "types": "dist/index.d.mts",
+  "unpkg": "dist/index.umd.js",
+  "scripts": {
+    "build": "tsdown"
+  },
+  "dependencies": {
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "tsdown": "^0.20.1"
+  }
+}
