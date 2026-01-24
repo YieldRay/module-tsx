@@ -16,5 +16,18 @@
   },
   "devDependencies": {
     "tsdown": "^0.20.1"
+  },
+  "author": "YieldRay",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YieldRay/module-tsx.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YieldRay/module-tsx/issues"
+  },
+  "homepage": "https://github.com/YieldRay/module-tsx#readme",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
   }
 }
