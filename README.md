@@ -15,6 +15,7 @@ Run TypeScript (and React) module directly in the browser.
   import React from "react"; // <- This will be converted to https://esm.sh/react
   import { createRoot } from "react-dom/client"; // <- This will also be converted automatically
   import App from "./src/App.tsx"; // <- Your TypeScript module will also be compiled on the fly
+  import lib from "https://my.cdn.domain"; // <- Direct http import will NOT be compiled
 
   const root = document.getElementById("root") as HTMLDivElement; // <- You can write TypeScript directly
   createRoot(root).render(

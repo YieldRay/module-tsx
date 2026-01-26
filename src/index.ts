@@ -1,19 +1,26 @@
-import { fetchModule } from "./network.ts";
+import { fetchESModule } from "./network.ts";
 import { transformSourceModule } from "./op.ts";
 
-export { transformSourceModule };
+const transformESModule = (sourceUrl: string, sourceCode: string) =>
+  transformSourceModule("esm", sourceUrl, sourceCode);
+
+export async function import$(sourceUrl: string) {
+  const code = await fetchESModule(sourceUrl);
+  const blobUrl = await transformESModule(sourceUrl, code);
+  return import(blobUrl);
+}
 
 const TYPE_ATTRIBUTE_VALUE = "module-tsx";
 
 async function runScript(script: HTMLScriptElement): Promise<void> {
   const blobUrl = script.src
-    ? await transformSourceModule(
+    ? await transformESModule(
         script.src,
-        await fetchModule(script.src, {
+        await fetchESModule(script.src, {
           priority: script.fetchPriority,
         }),
       )
-    : await transformSourceModule(location.href, script.innerHTML);
+    : await transformESModule(location.href, script.innerHTML);
 
   return import(blobUrl);
 }

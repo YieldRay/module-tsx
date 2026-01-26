@@ -1,7 +1,8 @@
 import ts from "typescript";
 import { createSourceFile, printSourceFile, transform } from "./ts.ts";
 import { needsReactImport, addReactImport } from "./react.ts";
-import { fetchModule } from "./network.ts";
+import { fetchESModule } from "./network.ts";
+import { cssLoader, type Loader } from "./loader.ts";
 
 /**
  * track blob URLs to their original source URLs
@@ -18,15 +19,29 @@ function track(sourceUrl: string, blobUrl: string) {
   blobMap.set(blobUrl, sourceUrl);
 }
 
+type ResourceType = "esm" | "css";
+const getLoaderByResourceType = (type: ResourceType): Loader => {
+  switch (type) {
+    case "css":
+      return cssLoader;
+    case "esm":
+      // this is built-in loader for ES modules
+      return rewriteModuleImport;
+    default:
+      throw new Error(`Unsupported resource type: ${type}`);
+  }
+};
+
 /**
  * Given a source URL and source code, transform the module and return a blob URL,
  * where the blob URL's content is the transformed module code.
  */
-export async function transformSourceModule(sourceUrl: string, sourceCode: string) {
+export async function transformSourceModule(sourceType: ResourceType, sourceUrl: string, sourceCode: string) {
   if (sourceMap.has(sourceUrl)) {
     return sourceMap.get(sourceUrl)!;
   }
-  const code = `import.meta.url=${JSON.stringify(sourceUrl)};\n` + (await rewriteModuleImport(sourceUrl, sourceCode));
+  const loader = getLoaderByResourceType(sourceType);
+  const code = `import.meta.url=${JSON.stringify(sourceUrl)};\n` + (await loader(sourceUrl, sourceCode));
   const blob = new Blob([code], { type: "text/javascript" });
   const blobUrl = URL.createObjectURL(blob);
   track(sourceUrl, blobUrl);
@@ -109,35 +124,49 @@ function collectRelativeSpecifiers(sourceFile: ts.SourceFile): Set<string> {
   return set;
 }
 
-async function resolveRelativeSpecifiers(specifiers: Set<string>, sourceUrl: string) {
+async function resolveRelativeSpecifiers(specifiers: Set<string>, sourceUrl: string): Promise<Map<string, string>> {
   const resolved = new Map<string, string>();
 
   const tasks = Array.from(specifiers).map(async (specifier) => {
-    const targetUrl = new URL(specifier, sourceUrl).toString();
-    const childCode = await fetchModule(targetUrl);
-    const blobUrl = await transformSourceModule(targetUrl, childCode);
-    resolved.set(specifier, blobUrl);
+    const targetUrl = new URL(specifier, sourceUrl);
+    const extension = targetUrl.pathname.split(".").pop()?.toLowerCase();
+    // based on extension
+    if (extension === "css") {
+      const blobUrl = await transformSourceModule("css", targetUrl.href, "");
+      resolved.set(specifier, blobUrl);
+    } else if (extension === "wasm") {
+      // wasm will be handled natively by the browser
+      // so we just return the original full URL
+      resolved.set(specifier, targetUrl.href);
+    } else {
+      const childCode = await fetchESModule(targetUrl);
+      const blobUrl = await transformSourceModule("esm", targetUrl.href, childCode);
+      //! the above line is RECURSIVE
+      resolved.set(specifier, blobUrl);
+    }
   });
 
   await Promise.all(tasks);
   return resolved;
 }
 
-function createRewriteImportTransformer(replacements: Map<string, string>): ts.TransformerFactory<ts.SourceFile> {
+function createRewriteImportTransformer(specifierMap: Map<string, string>): ts.TransformerFactory<ts.SourceFile> {
   const rewriteSpecifier = (specifier: string): string => {
-    if (replacements.has(specifier)) {
-      return replacements.get(specifier)!;
+    if (specifierMap.has(specifier)) {
+      return specifierMap.get(specifier)!;
     }
+
     if (specifier.startsWith("npm:")) {
-      return specifier.replace(/^npm:/, "https://esm.sh/");
+      return `https://esm.sh/${specifier.slice(4)}`;
     }
     if (specifier.startsWith("node:")) {
       return `https://raw.esm.sh/@jspm/core/nodelibs/browser/${specifier.slice(5)}.js`;
     }
     if (isBareSpecifier(specifier)) {
-      return new URL(specifier, "https://esm.sh/").toString();
+      return new URL(specifier, "https://esm.sh/").href;
     }
     if (isRelativeSpecifier(specifier)) {
+      // relative specifiers should have been handled in the `specifierMap` from `resolveRelativeSpecifiers()`
       throw new Error("Unreachable");
     }
     return specifier;
