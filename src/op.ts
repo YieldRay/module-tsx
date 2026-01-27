@@ -61,13 +61,9 @@ function getFileName(sourceUrl: string): string {
 async function rewriteModuleImport(sourceUrl: string, sourceCode: string): Promise<string> {
   const sourceFile = createSourceFile(sourceCode, getFileName(sourceUrl));
 
-  const relativeSpecifiers = collectRelativeSpecifiers(sourceFile);
-  // we only rewrite relative specifiers here
-  // in the future we may add support for local .css or other assets
-  // e.g. transform import './style.css' to import 'blob:xxx'
-  // where the blob is a js module to inject the original css to the document
-  // NOTE: esm.sh already supports css imports, so this is for local assets only
-  const rewrittenSpecifiers = await resolveRelativeSpecifiers(relativeSpecifiers, sourceUrl);
+  const specifiers = collectSpecifiers(sourceFile);
+  // collect and resolve all specifiers
+  const rewrittenSpecifiers = await resolveSpecifiers(specifiers, sourceUrl);
 
   let workingSourceFile = sourceFile;
   if (needsReactImport(workingSourceFile)) {
@@ -94,29 +90,29 @@ function isRelativeSpecifier(specifier: string): boolean {
   return specifier.startsWith(".") || specifier.startsWith("/");
 }
 
-function collectRelativeSpecifiers(sourceFile: ts.SourceFile): Set<string> {
+function collectSpecifiers(sourceFile: ts.SourceFile): Set<string> {
   const set = new Set<string>();
 
   const visit = (node: ts.Node) => {
-    const addIfRelative = (literal?: ts.StringLiteral) => {
-      if (literal && isRelativeSpecifier(literal.text)) {
+    const addSpecifier = (literal?: ts.StringLiteral) => {
+      if (literal) {
         set.add(literal.text);
       }
     };
 
     if (ts.isImportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
-      addIfRelative(node.moduleSpecifier);
+      addSpecifier(node.moduleSpecifier);
     }
 
     if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
       const arg = node.arguments[0];
       if (arg && ts.isStringLiteral(arg)) {
-        addIfRelative(arg);
+        addSpecifier(arg);
       }
     }
 
     if (ts.isExportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
-      addIfRelative(node.moduleSpecifier);
+      addSpecifier(node.moduleSpecifier);
     }
 
     ts.forEachChild(node, visit);
@@ -126,28 +122,36 @@ function collectRelativeSpecifiers(sourceFile: ts.SourceFile): Set<string> {
   return set;
 }
 
-async function resolveRelativeSpecifiers(specifiers: Set<string>, sourceUrl: string): Promise<Map<string, string>> {
+async function resolveSpecifiers(specifiers: Set<string>, sourceUrl: string): Promise<Map<string, string>> {
   const resolved = new Map<string, string>();
 
   const tasks = Array.from(specifiers).map(async (specifier) => {
-    const targetUrl = new URL(specifier, sourceUrl);
+    if (isRelativeSpecifier(specifier)) {
+      const targetUrl = new URL(specifier, sourceUrl);
 
-    if (targetUrl.pathname.endsWith(".module.css")) {
-      const cssCode = await fetchText(targetUrl);
-      const blobUrl = await transformSourceModule("css-module", targetUrl.href, cssCode);
-      resolved.set(specifier, blobUrl);
-    } else if (targetUrl.pathname.endsWith(".css")) {
-      const blobUrl = await transformSourceModule("css", targetUrl.href, "");
-      resolved.set(specifier, blobUrl);
-    } else if (targetUrl.pathname.endsWith(".wasm")) {
-      // wasm will be handled natively by the browser
-      // so we just return the original full URL
-      resolved.set(specifier, targetUrl.href);
-    } else {
-      const childCode = await fetchESModule(targetUrl);
-      const blobUrl = await transformSourceModule("esm", targetUrl.href, childCode);
-      //! the above line is RECURSIVE
-      resolved.set(specifier, blobUrl);
+      if (targetUrl.pathname.endsWith(".module.css")) {
+        const cssCode = await fetchText(targetUrl);
+        const blobUrl = await transformSourceModule("css-module", targetUrl.href, cssCode);
+        resolved.set(specifier, blobUrl);
+      } else if (targetUrl.pathname.endsWith(".css")) {
+        const blobUrl = await transformSourceModule("css", targetUrl.href, "");
+        resolved.set(specifier, blobUrl);
+      } else if (targetUrl.pathname.endsWith(".wasm")) {
+        // wasm will be handled natively by the browser
+        // so we just return the original full URL
+        resolved.set(specifier, targetUrl.href);
+      } else {
+        const childCode = await fetchESModule(targetUrl);
+        const blobUrl = await transformSourceModule("esm", targetUrl.href, childCode);
+        //! the above line is RECURSIVE
+        resolved.set(specifier, blobUrl);
+      }
+    } else if (specifier.startsWith("npm:")) {
+      resolved.set(specifier, `https://esm.sh/${specifier.slice(4)}`);
+    } else if (specifier.startsWith("node:")) {
+      resolved.set(specifier, `https://raw.esm.sh/@jspm/core/nodelibs/browser/${specifier.slice(5)}.js`);
+    } else if (isBareSpecifier(specifier)) {
+      resolved.set(specifier, new URL(specifier, "https://esm.sh/").href);
     }
   });
 
@@ -157,24 +161,7 @@ async function resolveRelativeSpecifiers(specifiers: Set<string>, sourceUrl: str
 
 function createRewriteImportTransformer(specifierMap: Map<string, string>): ts.TransformerFactory<ts.SourceFile> {
   const rewriteSpecifier = (specifier: string): string => {
-    if (specifierMap.has(specifier)) {
-      return specifierMap.get(specifier)!;
-    }
-
-    if (specifier.startsWith("npm:")) {
-      return `https://esm.sh/${specifier.slice(4)}`;
-    }
-    if (specifier.startsWith("node:")) {
-      return `https://raw.esm.sh/@jspm/core/nodelibs/browser/${specifier.slice(5)}.js`;
-    }
-    if (isBareSpecifier(specifier)) {
-      return new URL(specifier, "https://esm.sh/").href;
-    }
-    if (isRelativeSpecifier(specifier)) {
-      // relative specifiers should have been handled in the `specifierMap` from `resolveRelativeSpecifiers()`
-      throw new Error("Unreachable");
-    }
-    return specifier;
+    return specifierMap.get(specifier) ?? specifier;
   };
 
   const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
