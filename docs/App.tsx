@@ -66,7 +66,7 @@ function Flex({ children, ...style }: React.CSSProperties & { children?: React.R
   );
 }
 
-function LayoutNavigationDrawer({ children }: { children?: React.ReactNode }) {
+function LayoutNavigationDrawer({ children, className }: { children?: React.ReactNode; className?: string }) {
   const [open, setOpen] = useState(false);
   const isScreenExpanded = useWindowSizeType() === "expanded";
   const bottomSheetRef = useRef<BottomSheetHandle>(null);
@@ -95,6 +95,7 @@ function LayoutNavigationDrawer({ children }: { children?: React.ReactNode }) {
         background: "var(--md-sys-color-surface)",
         willChange: "transform",
       }}
+      className={className}
     >
       <NavigationDrawer open={open} headline="Mail" modal={!isScreenExpanded} onScrimClick={() => setOpen(false)}>
         <NavigationDrawerItem icon={<Icon path={mdiInbox} />} badge="24">
@@ -242,9 +243,9 @@ function ListCheckbox(props: React.ComponentProps<typeof List>) {
   return <List {...props} onClick={() => setChecked(!checked)} trailingIcon={<Checkbox checked={checked} />} />;
 }
 
-export default function Demo() {
+export default function Demo({ className }: { className?: string }) {
   return (
-    <LayoutNavigationDrawer>
+    <LayoutNavigationDrawer className={className}>
       <Flex padding="0.5rem">
         <Section1 />
       </Flex>

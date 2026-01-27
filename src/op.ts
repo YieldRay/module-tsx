@@ -1,8 +1,8 @@
 import ts from "typescript";
 import { createSourceFile, printSourceFile, transform } from "./ts.ts";
 import { needsReactImport, addReactImport } from "./react.ts";
-import { fetchESModule } from "./network.ts";
-import { cssLoader, type Loader } from "./loader.ts";
+import { fetchESModule, fetchText } from "./network.ts";
+import { cssLoader, cssModuleLoader, type Loader } from "./loader.ts";
 
 /**
  * track blob URLs to their original source URLs
@@ -19,11 +19,13 @@ function track(sourceUrl: string, blobUrl: string) {
   blobMap.set(blobUrl, sourceUrl);
 }
 
-type ResourceType = "esm" | "css";
+type ResourceType = "esm" | "css" | "css-module";
 const getLoaderByResourceType = (type: ResourceType): Loader => {
   switch (type) {
     case "css":
       return cssLoader;
+    case "css-module":
+      return cssModuleLoader;
     case "esm":
       // this is built-in loader for ES modules
       return rewriteModuleImport;
@@ -129,12 +131,15 @@ async function resolveRelativeSpecifiers(specifiers: Set<string>, sourceUrl: str
 
   const tasks = Array.from(specifiers).map(async (specifier) => {
     const targetUrl = new URL(specifier, sourceUrl);
-    const extension = targetUrl.pathname.split(".").pop()?.toLowerCase();
-    // based on extension
-    if (extension === "css") {
+
+    if (targetUrl.pathname.endsWith(".module.css")) {
+      const cssCode = await fetchText(targetUrl);
+      const blobUrl = await transformSourceModule("css-module", targetUrl.href, cssCode);
+      resolved.set(specifier, blobUrl);
+    } else if (targetUrl.pathname.endsWith(".css")) {
       const blobUrl = await transformSourceModule("css", targetUrl.href, "");
       resolved.set(specifier, blobUrl);
-    } else if (extension === "wasm") {
+    } else if (targetUrl.pathname.endsWith(".wasm")) {
       // wasm will be handled natively by the browser
       // so we just return the original full URL
       resolved.set(specifier, targetUrl.href);
