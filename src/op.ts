@@ -3,6 +3,7 @@ import { createSourceFile, printSourceFile, transform } from "./ts.ts";
 import { needsReactImport, addReactImport } from "./react.ts";
 import { fetchESModule, fetchText } from "./network.ts";
 import { cssLoader, cssModuleLoader, type Loader } from "./loader.ts";
+import { parseImportMaps, resolveFromImportMap, type ImportMapData } from "./importmap.ts";
 
 /**
  * track blob URLs to their original source URLs
@@ -13,6 +14,11 @@ const blobMap = new Map<string, string>();
  * track original source URLs to their transformed blob URLs
  */
 const sourceMap = new Map<string, string>();
+
+/**
+ * cached import maps from <script type="importmap"> elements
+ */
+let cachedImportMaps: ImportMapData | null = null;
 
 function track(sourceUrl: string, blobUrl: string) {
   sourceMap.set(sourceUrl, blobUrl);
@@ -125,7 +131,19 @@ function collectSpecifiers(sourceFile: ts.SourceFile): Set<string> {
 async function resolveSpecifiers(specifiers: Set<string>, sourceUrl: string): Promise<Map<string, string>> {
   const resolved = new Map<string, string>();
 
+  // Load import maps once on first call
+  if (cachedImportMaps === null) {
+    cachedImportMaps = parseImportMaps();
+  }
+
   const tasks = Array.from(specifiers).map(async (specifier) => {
+    // Check import map first
+    const mappedSpecifier = resolveFromImportMap(specifier, cachedImportMaps!, sourceUrl);
+    if (mappedSpecifier) {
+      resolved.set(specifier, mappedSpecifier);
+      return;
+    }
+
     if (isRelativeSpecifier(specifier)) {
       const targetUrl = new URL(specifier, sourceUrl);
 
