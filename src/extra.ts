@@ -1,18 +1,18 @@
 import ts from "typescript";
 
 /**
+ * Remove export keywords and statements (currently unused)
+ * Note: Valid to use exports in <script type="module">, so this transformer is not applied
  * @type ts.TransformerFactory<ts.SourceFile>
- * Unused function that can remove export keywords and export statements.
- * Since it's valid to use export keyword in <script type="module">, this is not used.
  */
 export function removeExportsTransformer(context: ts.TransformationContext): ts.Transformer<ts.SourceFile> {
   function visitNode(node: ts.Node): ts.Node | ts.Node[] | undefined {
-    // Handle export function declarations
+    // Handle exported function declarations
     if (ts.isFunctionDeclaration(node) && node.modifiers?.some((mod) => mod.kind === ts.SyntaxKind.ExportKeyword)) {
       const isDefaultExport = node.modifiers.some((mod) => mod.kind === ts.SyntaxKind.DefaultKeyword);
 
       if (isDefaultExport) {
-        // export default function -> function default$Math.random
+        // Convert: export default function -> function default$random
         const randomName = `default$${Math.random().toString(36).slice(2)}`;
         return ts.factory.createFunctionDeclaration(
           node.modifiers?.filter(
@@ -26,7 +26,7 @@ export function removeExportsTransformer(context: ts.TransformationContext): ts.
           node.body,
         );
       } else {
-        // export function name(){} -> function name(){}
+        // Remove export keyword from function
         return ts.factory.createFunctionDeclaration(
           node.modifiers?.filter((mod) => mod.kind !== ts.SyntaxKind.ExportKeyword),
           node.asteriskToken,
@@ -39,7 +39,7 @@ export function removeExportsTransformer(context: ts.TransformationContext): ts.
       }
     }
 
-    // Handle export variable declarations
+    // Handle exported variable declarations
     if (ts.isVariableStatement(node) && node.modifiers?.some((mod) => mod.kind === ts.SyntaxKind.ExportKeyword)) {
       return ts.factory.createVariableStatement(
         node.modifiers?.filter((mod) => mod.kind !== ts.SyntaxKind.ExportKeyword),
@@ -47,7 +47,7 @@ export function removeExportsTransformer(context: ts.TransformationContext): ts.
       );
     }
 
-    // Handle export class declarations
+    // Handle exported class declarations
     if (ts.isClassDeclaration(node) && node.modifiers?.some((mod) => mod.kind === ts.SyntaxKind.ExportKeyword)) {
       const isDefaultExport = node.modifiers.some((mod) => mod.kind === ts.SyntaxKind.DefaultKeyword);
 
@@ -73,12 +73,12 @@ export function removeExportsTransformer(context: ts.TransformationContext): ts.
       }
     }
 
-    // Handle export {} - remove entirely
+    // Remove export declarations without module specifier
     if (ts.isExportDeclaration(node) && !node.moduleSpecifier) {
       return undefined;
     }
 
-    // Handle export ... from "module" - remove entirely
+    // Remove export declarations with module specifier
     if (ts.isExportDeclaration(node)) {
       return undefined;
     }

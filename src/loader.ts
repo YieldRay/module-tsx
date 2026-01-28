@@ -1,14 +1,15 @@
 type Awaitable<T> = T | Promise<T>;
 
 /**
- * @param sourceUrl full URL of the source file
- * @param sourceCode raw source code
- * @returns raw esm code
+ * Loader function type
+ * @param sourceUrl - Full URL of the source file
+ * @param sourceCode - Raw source code
+ * @returns Raw ESM code
  */
 export type Loader = (sourceUrl: string, sourceCode: string) => Awaitable<string>;
 
 export const cssLoader: Loader = (sourceUrl, _sourceCode) => {
-  // _sourceCode is empty string
+  // Note: _sourceCode is empty string
   const code = `\
 const link = document.createElement("link");
 link.rel = "stylesheet";
@@ -22,7 +23,7 @@ export const cssModuleLoader: Loader = (sourceUrl, sourceCode) => {
   const pathname = new URL(sourceUrl).pathname;
   const filename = pathname.substring(pathname.lastIndexOf("/") + 1) || "index.css";
   const withoutExt = filename.slice(0, filename.indexOf("."));
-  // remove all non-alphanumeric characters
+  // Remove non-alphanumeric characters
   const prefix = withoutExt.replace(/[^a-zA-Z0-9]/g, "_");
 
   const { map, css } = cssToModule(sourceCode, prefix);

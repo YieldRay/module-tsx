@@ -6,19 +6,13 @@ import { cssLoader, cssModuleLoader, type Loader } from "./loader.ts";
 import { parseImportMaps, resolveFromImportMap, type ImportMapData } from "./importmap.ts";
 import { ModuleTSXError } from "./error.ts";
 
-/**
- * track blob URLs to their original source URLs
- */
+/** Track blob URLs to original source URLs */
 const blobMap = new Map<string, string>();
 
-/**
- * track original source URLs to their transformed blob URLs
- */
+/** Track source URLs to transformed blob URLs */
 const sourceMap = new Map<string, string>();
 
-/**
- * cached import maps from <script type="importmap"> elements
- */
+/** Cached import maps from <script type="importmap"> */
 let cachedImportMaps: ImportMapData | null = null;
 
 function track(sourceUrl: string, blobUrl: string) {
@@ -34,17 +28,14 @@ const getLoaderByResourceType = (type: ResourceType): Loader => {
     case "css-module":
       return cssModuleLoader;
     case "esm":
-      // this is built-in loader for ES modules
+      // Built-in loader for ES modules
       return rewriteModuleImport;
     default:
       throw new ModuleTSXError(`Unsupported resource type: ${type}`);
   }
 };
 
-/**
- * Given a source URL and source code, transform the module and return a blob URL,
- * where the blob URL's content is the transformed module code.
- */
+/** Transform module source code and return a blob URL with the transformed content */
 export async function transformSourceModule(sourceType: ResourceType, sourceUrl: string, sourceCode: string) {
   if (sourceMap.has(sourceUrl)) {
     return sourceMap.get(sourceUrl)!;
@@ -69,7 +60,7 @@ async function rewriteModuleImport(sourceUrl: string, sourceCode: string): Promi
   const sourceFile = createSourceFile(sourceCode, getFileName(sourceUrl));
 
   const specifiers = collectSpecifiers(sourceFile);
-  // collect and resolve all specifiers
+  // Collect and resolve all specifiers
   const rewrittenSpecifiers = await resolveSpecifiers(specifiers, sourceUrl);
 
   let workingSourceFile = sourceFile;
@@ -138,7 +129,7 @@ async function resolveSpecifiers(specifiers: Set<string>, sourceUrl: string): Pr
   }
 
   const tasks = Array.from(specifiers).map(async (specifier) => {
-    // Check import map first
+    // Check import maps first
     const mappedSpecifier = resolveFromImportMap(specifier, cachedImportMaps!, sourceUrl);
     if (mappedSpecifier) {
       resolved.set(specifier, mappedSpecifier);
@@ -162,7 +153,7 @@ async function resolveSpecifiers(specifiers: Set<string>, sourceUrl: string): Pr
       } else {
         const childCode = await fetchESModule(targetUrl);
         const blobUrl = await transformSourceModule("esm", targetUrl.href, childCode);
-        //! the above line is RECURSIVE
+        //! ^ Recursive call
         resolved.set(specifier, blobUrl);
       }
     } else if (specifier.startsWith("npm:")) {

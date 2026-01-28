@@ -1,26 +1,24 @@
 import ts from "typescript";
 
-/**
- * Check if code uses JSX but missing React import
- */
+/** Check if code uses JSX without React import */
 export function needsReactImport(sourceFile: ts.SourceFile): boolean {
   let hasJSX = false;
   let hasReactVariable = false;
 
   function visitNode(node: ts.Node): void {
-    // Check JSX elements
+    // Check for JSX elements
     if (ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node) || ts.isJsxFragment(node)) {
       hasJSX = true;
     }
 
-    // Check if React variable exists at module top level
+    // Check for React variable at module level
     if (ts.isImportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
       if (node.importClause) {
-        // Default import: import React from 'xxx'
+        // Check default import: import React from 'xxx'
         if (node.importClause.name?.text === "React") {
           hasReactVariable = true;
         }
-        // Namespace import: import * as React from 'xxx'
+        // Check namespace import: import * as React from 'xxx'
         if (node.importClause.namedBindings && ts.isNamespaceImport(node.importClause.namedBindings)) {
           if (node.importClause.namedBindings.name.text === "React") {
             hasReactVariable = true;
@@ -29,7 +27,7 @@ export function needsReactImport(sourceFile: ts.SourceFile): boolean {
       }
     }
 
-    // Check React variable declarations: const React = ...
+    // Check variable declarations: const React = ...
     if (ts.isVariableDeclaration(node) && node.name && ts.isIdentifier(node.name)) {
       if (node.name.text === "React") {
         hasReactVariable = true;
@@ -43,17 +41,15 @@ export function needsReactImport(sourceFile: ts.SourceFile): boolean {
   return hasJSX && !hasReactVariable;
 }
 
-/**
- * Add React import statement at the top if missing
- */
+/** Add React import statement to the top */
 export function addReactImport(sourceFile: ts.SourceFile): ts.SourceFile {
-  // Find existing react import to use same specifier
+  // Find existing React import to reuse specifier
   let reactSpecifier = "react";
 
   function findReactSpecifier(node: ts.Node): void {
     if (ts.isImportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
       const specifier = node.moduleSpecifier.text;
-      // Match: "react", "react@xxx", "*/react", "*/react@xxx"
+      // Match react specifiers: "react", "react@xxx", "*/react", "*/react@xxx"
       if (
         specifier === "react" ||
         /^react@/.test(specifier) ||

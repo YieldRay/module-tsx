@@ -15,7 +15,6 @@ export async function fetchText(input: RequestInfo | URL, init?: RequestInit): P
 
 export async function fetchESModule(input: RequestInfo | URL, init?: RequestInit): Promise<string> {
   const res = await fetchResponse(input, init);
-  // the HTML spec will check content-type
-  // but since the extension is .ts or .tsx, we can only skip that check here
+  // Skip content-type check for .ts/.tsx files
   return res.text();
 }

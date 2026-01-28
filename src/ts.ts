@@ -19,7 +19,7 @@ export function printSourceFile(sourceFile: ts.SourceFile): string {
       removeComments: false,
     });
     const code: string = printer.printFile(sourceFile);
-    // Transpile to JS
+    // Transpile to JavaScript
     return ts.transpile(code, {
       target: ts.ScriptTarget.Latest,
       module: ts.ModuleKind.ESNext,

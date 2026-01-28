@@ -1,6 +1,4 @@
-/**
- * Custom error class for module-tsx specific errors
- */
+/** Custom error class for module-tsx */
 export class ModuleTSXError extends Error {
   constructor(message?: string, options?: ErrorOptions) {
     super(message, options);
@@ -13,9 +11,7 @@ export class ModuleTSXError extends Error {
   }
 }
 
-/**
- * Utility function to log warnings with consistent formatting
- */
+/** Log warnings with consistent formatting */
 export function warn(message: string, ...args: unknown[]): void {
   console.warn(`[module-tsx] ${message}`, ...args);
 }
