@@ -1,3 +1,5 @@
+import { warn } from "./error.ts";
+
 export interface ImportMapData {
   imports?: Record<string, string>;
   scopes?: Record<string, Record<string, string>>;
@@ -47,7 +49,7 @@ export function parseImportMaps(): ImportMapData {
         }
       }
     } catch (error) {
-      console.warn(`Failed to parse importmap script:`, error);
+      warn(`Failed to parse importmap script:`, error);
     }
   }
 

@@ -4,6 +4,7 @@ import { needsReactImport, addReactImport } from "./react.ts";
 import { fetchESModule, fetchText } from "./network.ts";
 import { cssLoader, cssModuleLoader, type Loader } from "./loader.ts";
 import { parseImportMaps, resolveFromImportMap, type ImportMapData } from "./importmap.ts";
+import { ModuleTSXError } from "./error.ts";
 
 /**
  * track blob URLs to their original source URLs
@@ -36,7 +37,7 @@ const getLoaderByResourceType = (type: ResourceType): Loader => {
       // this is built-in loader for ES modules
       return rewriteModuleImport;
     default:
-      throw new Error(`Unsupported resource type: ${type}`);
+      throw new ModuleTSXError(`Unsupported resource type: ${type}`);
   }
 };
 

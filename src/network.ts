@@ -1,7 +1,9 @@
+import { ModuleTSXError } from "./error.ts";
+
 export async function fetchResponse(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const res = await fetch(input, init);
   if (!res.ok) {
-    throw new Error(`Failed to fetch resource ${res.url}: ${res.status}`);
+    throw new ModuleTSXError(`Failed to fetch resource ${res.url}: ${res.status}`);
   }
   return res;
 }
