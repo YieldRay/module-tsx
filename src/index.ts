@@ -1,32 +1,23 @@
-import { fetchESModule } from "./network.ts";
-import { transformSourceModule } from "./op.ts";
-import { warn } from "./error.ts";
+import { ModuleTSX } from "./module-tsx.ts";
+import { ModuleTSXError, warn } from "./error.ts";
 
-const transformESModule = (sourceUrl: string, sourceCode: string) =>
-  transformSourceModule("esm", sourceUrl, sourceCode);
-
-export async function import$(sourceUrl: string) {
-  const code = await fetchESModule(sourceUrl);
-  const blobUrl = await transformESModule(sourceUrl, code);
-  return import(blobUrl);
-}
+export { ModuleTSX, ModuleTSXError };
 
 const TYPE_ATTRIBUTE_VALUE = "module-tsx";
 
-async function runScript(script: HTMLScriptElement): Promise<void> {
-  const blobUrl = script.src
-    ? await transformESModule(
-        script.src,
-        await fetchESModule(script.src, {
-          priority: script.fetchPriority,
-        }),
-      )
-    : await transformESModule(location.href, script.innerHTML);
-
-  return import(blobUrl);
-}
-
 async function sideEffect() {
+  const instance = new ModuleTSX();
+
+  const importScript = async (script: HTMLScriptElement) => {
+    const src = script.src;
+    if (src) {
+      return instance.import(src);
+    } else {
+      const code = script.innerHTML || "";
+      return instance.importCode(document.location.href, code);
+    }
+  };
+
   for (const s of Array.from(document.querySelectorAll(`script[type="${TYPE_ATTRIBUTE_VALUE}"]`))) {
     const script = s as HTMLScriptElement;
 
@@ -42,9 +33,9 @@ async function sideEffect() {
     }
 
     if (script.async) {
-      runScript(script);
+      importScript(script);
     } else {
-      await runScript(script);
+      await importScript(script);
     }
   }
 }

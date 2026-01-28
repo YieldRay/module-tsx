@@ -12,9 +12,3 @@ export async function fetchText(input: RequestInfo | URL, init?: RequestInit): P
   const res = await fetchResponse(input, init);
   return res.text();
 }
-
-export async function fetchESModule(input: RequestInfo | URL, init?: RequestInit): Promise<string> {
-  const res = await fetchResponse(input, init);
-  // Skip content-type check for .ts/.tsx files
-  return res.text();
-}
