@@ -6,6 +6,22 @@ import { cssLoader, cssModuleLoader, type Loader } from "./loader.ts";
 import { parseImportMaps, resolveFromImportMap, type ImportMapData } from "./importmap.ts";
 import { ModuleTSXError } from "./error.ts";
 
+// class ModuleTSX {
+//   private readonly baseUrl: string;
+//   private readonly fetchCode: (url: string) => Promise<string>;
+//   private readonly importMap: ImportMapData;
+//   constructor(config?: {
+//     baseUrl?: string;
+//     fetchCode?: (fullURL: string) => Promise<string>;
+//     importMap?: ImportMapData;
+//   }) {
+//     this.baseUrl = config?.baseUrl ?? location.href;
+//     this.fetchCode = config?.fetchCode ?? fetchESModule;
+//     this.importMap = config?.importMap ?? parseImportMaps();
+//   }
+//   import() {}
+// }
+
 /** Track blob URLs to original source URLs */
 const blobMap = new Map<string, string>();
 
@@ -29,7 +45,7 @@ const getLoaderByResourceType = (type: ResourceType): Loader => {
       return cssModuleLoader;
     case "esm":
       // Built-in loader for ES modules
-      return rewriteModuleImport;
+      return tsxLoader;
     default:
       throw new ModuleTSXError(`Unsupported resource type: ${type}`);
   }
@@ -56,7 +72,7 @@ function getFileName(sourceUrl: string): string {
   }
 }
 
-async function rewriteModuleImport(sourceUrl: string, sourceCode: string): Promise<string> {
+async function tsxLoader(sourceUrl: string, sourceCode: string): Promise<string> {
   const sourceFile = createSourceFile(sourceCode, getFileName(sourceUrl));
 
   const specifiers = collectSpecifiers(sourceFile);
