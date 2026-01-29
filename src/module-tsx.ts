@@ -12,36 +12,57 @@ import {
 import { addReactImport, needsReactImport } from "./react.ts";
 import { createSourceFile, printSourceFile, transform } from "./ts.ts";
 
-export class ModuleTSX {
-  private readonly baseUrl: string;
-  private readonly fetchCode: (url: string) => Promise<string>;
-  private readonly importMap: ImportMapData;
+export class ModuleTSX extends EventTarget {
+  public readonly baseUrl: string;
+  public readonly importMap: ImportMapData;
+  public fetchCode: (url: string) => Promise<string>;
   constructor(config?: {
     baseUrl?: string;
     fetchCode?: (fullURL: string) => Promise<string>;
     importMap?: ImportMapData;
   }) {
+    super();
     this.baseUrl = config?.baseUrl ?? location.href;
     this.fetchCode = config?.fetchCode ?? fetchText;
     this.importMap = config?.importMap ?? parseImportMaps();
   }
+
+  private emit(type: string, detail?: any) {
+    this.dispatchEvent(new CustomEvent(type, { detail }));
+    this.dispatchEvent(
+      new CustomEvent("*", {
+        detail: {
+          type,
+          payload: detail,
+        },
+      }),
+    );
+  }
+
   public async import(id: string, options?: any): Promise<any> {
-    if (isBareSpecifier(id)) {
-      const mappedSpecifier = resolveFromImportMap(id, this.importMap, this.baseUrl);
-      if (mappedSpecifier) {
-        id = mappedSpecifier;
-      } else {
-        id = new URL(id, "https://esm.sh/").href;
+    this.emit("import", { id });
+    try {
+      if (isBareSpecifier(id)) {
+        const mappedSpecifier = resolveFromImportMap(id, this.importMap, this.baseUrl);
+        if (mappedSpecifier) {
+          id = mappedSpecifier;
+        } else {
+          id = new URL(id, "https://esm.sh/").href;
+        }
       }
+      const url = isRelativeSpecifier(id) ? new URL(id, this.baseUrl).href : id;
+      const code = await this.fetchCode(url);
+      return this.importCode(url, code, options);
+    } catch (error) {
+      this.emit("import:error", { id, error });
+      throw error;
     }
-    const url = isRelativeSpecifier(id) ? new URL(id, this.baseUrl).href : id;
-    const code = await this.fetchCode(url);
-    return this.importCode(url, code, options);
   }
 
   public async importCode(sourceUrl: string, code: string, options?: any): Promise<any> {
     const transformedUrl = await this.transformSourceModule("esm", sourceUrl, code);
-    return import(transformedUrl, options);
+    const module = await import(transformedUrl, options);
+    return module;
   }
 
   /** Transform module source code and return a blob URL with the transformed content */
@@ -72,20 +93,28 @@ export class ModuleTSX {
   }
 
   private async tsxLoader(sourceUrl: string, sourceCode: string): Promise<string> {
-    const sourceFile = createSourceFile(sourceCode, getFileName(sourceUrl));
+    this.emit("transform", { sourceUrl });
 
-    const specifiers = collectSpecifiers(sourceFile);
-    // Collect and resolve all specifiers
-    const rewrittenSpecifiers = await this.resolveSpecifiers(specifiers, sourceUrl);
+    try {
+      const sourceFile = createSourceFile(sourceCode, getFileName(sourceUrl));
+      const specifiers = collectSpecifiers(sourceFile);
+      // Collect and resolve all specifiers
+      const rewrittenSpecifiers = await this.resolveSpecifiers(specifiers, sourceUrl);
 
-    let workingSourceFile = sourceFile;
-    if (needsReactImport(workingSourceFile)) {
-      workingSourceFile = addReactImport(workingSourceFile);
+      let workingSourceFile = sourceFile;
+      if (needsReactImport(workingSourceFile)) {
+        workingSourceFile = addReactImport(workingSourceFile);
+      }
+
+      const transformers: ts.TransformerFactory<ts.SourceFile>[] = [
+        createRewriteImportTransformer(rewrittenSpecifiers),
+      ];
+      const transformedFile = transform(workingSourceFile, transformers);
+      return printSourceFile(transformedFile);
+    } catch (error) {
+      this.emit("transform:error", { sourceUrl, error });
+      throw error;
     }
-
-    const transformers: ts.TransformerFactory<ts.SourceFile>[] = [createRewriteImportTransformer(rewrittenSpecifiers)];
-    const transformedFile = transform(workingSourceFile, transformers);
-    return printSourceFile(transformedFile);
   }
 
   private async resolveSpecifier(specifier: string, sourceUrl: string): Promise<string> {

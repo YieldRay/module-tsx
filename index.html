@@ -5,12 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ModuleTSX</title>
     <script></script>
-    <script src="./dist/index.umd.js"></script>
     <!-- <script type="module" src="https://esm.sh/@tailwindcss/browser"></script> -->
     <link rel="stylesheet" href="https://esm.sh/soda-material/dist/style.css" />
     <script type="module-tsx" src="./docs/main.tsx"></script>
   </head>
   <body>
-    <div id="root">Compiling...Please wait...</div>
+    <div id="root">
+      <pre style="color: #888; font-size: 12px; margin: 0; padding: 0">loading module-tsx library...</pre>
+    </div>
   </body>
+  <script src="./dist/index.umd.js"></script>
+  <script>
+    const { instance, ModuleTSX } = ModuleTSX; // the UMD global variable
+    instance.addEventListener("*", (event) => {
+      const { type, payload } = event.detail;
+      const el = Object.assign(document.createElement("pre"), {
+        innerText: `${type}: ${JSON.stringify(payload)}`,
+        style: `color: ${type.endsWith(":error") ? "#f00" : "#888"}; font-size: 12px; margin: 0; padding: 0;`,
+      });
+      document.getElementById("root").appendChild(el);
+    });
+  </script>
 </html>

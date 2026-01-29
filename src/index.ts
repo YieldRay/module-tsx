@@ -3,11 +3,13 @@ import { ModuleTSXError, warn } from "./error.ts";
 
 export { ModuleTSX, ModuleTSXError };
 
+/**
+ * The singleton global instance of ModuleTSX.
+ */
+export const instance = new ModuleTSX();
+
 const TYPE_ATTRIBUTE_VALUE = "module-tsx";
-
 async function sideEffect() {
-  const instance = new ModuleTSX();
-
   const importScript = async (script: HTMLScriptElement) => {
     const src = script.src;
     if (src) {
