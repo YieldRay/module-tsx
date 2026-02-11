@@ -1,9 +1,8 @@
 import ts from "typescript";
 import { ModuleTSXError } from "./error.ts";
 
-const FILE_NAME = "temp.tsx";
 
-export function createSourceFile(code: string, fileName = FILE_NAME) {
+export function createSourceFile(code: string, fileName :string) {
   try {
     const sourceFile = ts.createSourceFile(fileName, code, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
     return sourceFile;

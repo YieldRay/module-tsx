@@ -10,7 +10,7 @@ export type Loader = (sourceUrl: string, sourceCode: string) => Awaitable<string
 
 export const cssLoader: Loader = (sourceUrl, _sourceCode) => {
   // Note: _sourceCode is empty string
-  const code = `\
+  const code = /*js*/ `\
 const link = document.createElement("link");
 link.rel = "stylesheet";
 link.href = ${JSON.stringify(sourceUrl)};
@@ -28,7 +28,7 @@ export const cssModuleLoader: Loader = (sourceUrl, sourceCode) => {
 
   const { map, css } = cssToModule(sourceCode, prefix);
 
-  const code = `\
+  const code = /*js*/ `\
 const style = document.createElement("style");
 style.textContent = ${JSON.stringify(css)};
 document.head.appendChild(style);
