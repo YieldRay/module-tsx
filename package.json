@@ -15,7 +15,7 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "tsdown": "^0.20.1"
+    "tsdown": "^0.20.3"
   },
   "author": "YieldRay",
   "license": "MIT",

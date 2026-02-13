@@ -1,7 +1,7 @@
 import type ts from "typescript";
 import { ModuleTSXError } from "./error.ts";
 import { parseImportMaps, resolveFromImportMap, type ImportMapData } from "./importmap.ts";
-import { cssLoader, cssModuleLoader, type Loader } from "./loader.ts";
+import { cssLinkLoader, cssLoader, cssModuleLoader, type Loader } from "./loader.ts";
 import { fetchText } from "./network.ts";
 import {
   collectSpecifiers,
@@ -15,16 +15,20 @@ import { createSourceFile, printSourceFile, transform } from "./ts.ts";
 export class ModuleTSX extends EventTarget {
   public readonly baseUrl: string;
   public readonly importMap: ImportMapData;
-  public fetchCode: (url: string) => Promise<string>;
+  public readonly fetchCode: (url: string) => Promise<string>;
+  public readonly cssStrategy: "style" | "link";
+
   constructor(config?: {
     baseUrl?: string;
     fetchCode?: (fullURL: string) => Promise<string>;
     importMap?: ImportMapData;
+    cssStrategy?: "style" | "link";
   }) {
     super();
     this.baseUrl = config?.baseUrl ?? location.href;
     this.fetchCode = config?.fetchCode ?? fetchText;
     this.importMap = config?.importMap ?? parseImportMaps();
+    this.cssStrategy = config?.cssStrategy ?? "style";
   }
 
   private emit(type: string, detail?: any) {
@@ -81,7 +85,11 @@ export class ModuleTSX extends EventTarget {
   private getLoaderByResourceType(type: ResourceType): Loader {
     switch (type) {
       case "css":
-        return cssLoader;
+        if (this.cssStrategy === "link") {
+          return cssLinkLoader;
+        } else {
+          return cssLoader;
+        }
       case "css-module":
         return cssModuleLoader;
       case "esm":
@@ -122,33 +130,45 @@ export class ModuleTSX extends EventTarget {
     if (mappedSpecifier) {
       return mappedSpecifier;
     }
+    const getCssUrl = async (url: string) => {
+      const code = this.cssStrategy === "link" ? "" : await this.fetchCode(url);
+      return await this.transformSourceModule("css", url, code);
+    };
+    const toEsmSh = (specifier: string) => {
+      const url = `https://esm.sh/${specifier}`;
+      if (specifier.endsWith(".css")) {
+        return getCssUrl(url);
+      }
+      return url;
+    };
 
     if (isRelativeSpecifier(specifier)) {
       const targetUrl = new URL(specifier, sourceUrl);
-
+      // local file, we fetch and transform it, then return the blob URL
       if (targetUrl.pathname.endsWith(".module.css")) {
-        const cssCode = await this.fetchCode(targetUrl.href);
-        const blobUrl = await this.transformSourceModule("css-module", targetUrl.href, cssCode);
+        const blobUrl = await this.transformSourceModule(
+          "css-module",
+          targetUrl.href,
+          await this.fetchCode(targetUrl.href),
+        );
         return blobUrl;
       } else if (targetUrl.pathname.endsWith(".css")) {
-        const blobUrl = await this.transformSourceModule("css", targetUrl.href, "");
-        return blobUrl;
+        return getCssUrl(targetUrl.href);
       } else if (targetUrl.pathname.endsWith(".wasm")) {
         // wasm will be handled natively by the browser
         // so we just return the original full URL
         return targetUrl.href;
       } else {
-        const childCode = await this.fetchCode(targetUrl.href);
-        const blobUrl = await this.transformSourceModule("esm", targetUrl.href, childCode);
-        //! ^ Recursive call
+        const blobUrl = await this.transformSourceModule("esm", targetUrl.href, await this.fetchCode(targetUrl.href));
+        //! ^ transformSourceModule is recursive ^
         return blobUrl;
       }
-    } else if (specifier.startsWith("npm:")) {
-      return `https://esm.sh/${specifier.slice(4)}`;
     } else if (specifier.startsWith("node:")) {
       return `https://raw.esm.sh/@jspm/core/nodelibs/browser/${specifier.slice(5)}.js`;
+    } else if (specifier.startsWith("npm:")) {
+      return toEsmSh(specifier.slice(4));
     } else if (isBareSpecifier(specifier)) {
-      return new URL(specifier, "https://esm.sh/").href;
+      return toEsmSh(specifier);
     } else {
       // Fallback: return the original specifier
       return specifier;

@@ -8,8 +8,18 @@ type Awaitable<T> = T | Promise<T>;
  */
 export type Loader = (sourceUrl: string, sourceCode: string) => Awaitable<string>;
 
-export const cssLoader: Loader = (sourceUrl, _sourceCode) => {
-  // Note: _sourceCode is empty string
+export const cssLoader: Loader = (sourceUrl, sourceCode) => {
+  const code = /*js*/ `\
+const style = document.createElement("style");
+style.dataset.href = ${JSON.stringify(sourceUrl)}; // for debugging purposes
+style.textContent = ${JSON.stringify(sourceCode)};
+document.head.appendChild(style);
+`;
+  return code;
+};
+
+export const cssLinkLoader: Loader = (sourceUrl, _sourceCode) => {
+  // Note: _sourceCode is unused
   const code = /*js*/ `\
 const link = document.createElement("link");
 link.rel = "stylesheet";
@@ -30,9 +40,9 @@ export const cssModuleLoader: Loader = (sourceUrl, sourceCode) => {
 
   const code = /*js*/ `\
 const style = document.createElement("style");
+style.dataset.href = ${JSON.stringify(sourceUrl)}; // for debugging purposes
 style.textContent = ${JSON.stringify(css)};
 document.head.appendChild(style);
-
 export default ${JSON.stringify(map)};
 `;
   return code;

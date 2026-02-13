@@ -1,6 +1,8 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 
+import "soda-material/dist/style.css";
+
 import styles from "./index.module.css";
 import App from "./App.tsx";
 

@@ -6,7 +6,6 @@
     <title>ModuleTSX</title>
     <script></script>
     <!-- <script type="module" src="https://esm.sh/@tailwindcss/browser"></script> -->
-    <link rel="stylesheet" href="https://esm.sh/soda-material/dist/style.css" />
     <script type="module-tsx" src="./docs/main.tsx"></script>
   </head>
   <body>
@@ -16,7 +15,7 @@
   </body>
   <script src="./dist/index.umd.js"></script>
   <script>
-    const { instance, ModuleTSX } = ModuleTSX; // the UMD global variable
+    const { instance, ModuleTSX } = window.ModuleTSX; // the UMD global variable
     instance.addEventListener("*", (event) => {
       const { type, payload } = event.detail;
       const el = Object.assign(document.createElement("pre"), {
