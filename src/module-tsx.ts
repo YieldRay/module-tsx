@@ -1,8 +1,8 @@
 import type ts from "typescript";
 import { ModuleTSXError } from "./error.ts";
 import { parseImportMaps, resolveFromImportMap, type ImportMapData } from "./importmap.ts";
-import { cssLinkLoader, cssLoader, cssModuleLoader, type Loader } from "./loader.ts";
-import { fetchText } from "./network.ts";
+import { cssLoader, cssModuleLoader, type Loader } from "./loader.ts";
+import { fetchResponse } from "./network.ts";
 import {
   collectSpecifiers,
   createRewriteImportTransformer,
@@ -15,20 +15,22 @@ import { createSourceFile, printSourceFile, transform } from "./ts.ts";
 export class ModuleTSX extends EventTarget {
   public readonly baseUrl: string;
   public readonly importMap: ImportMapData;
-  public readonly fetchCode: (url: string) => Promise<string>;
-  public readonly cssStrategy: "style" | "link";
+  public readonly fetch: (url: string) => Promise<Response>;
+  private readonly fetchText = async (url: string) => {
+    return this.fetch(url).then((res) => res.text());
+  };
 
   constructor(config?: {
     baseUrl?: string;
-    fetchCode?: (fullURL: string) => Promise<string>;
+    /** A simplified fetch function, since we do not need pass any header or other options */
+    fetch?: (fullURL: string) => Promise<Response>;
     importMap?: ImportMapData;
     cssStrategy?: "style" | "link";
   }) {
     super();
     this.baseUrl = config?.baseUrl ?? location.href;
-    this.fetchCode = config?.fetchCode ?? fetchText;
     this.importMap = config?.importMap ?? parseImportMaps();
-    this.cssStrategy = config?.cssStrategy ?? "style";
+    this.fetch = config?.fetch ?? fetchResponse;
   }
 
   private emit(type: string, detail?: any) {
@@ -55,7 +57,7 @@ export class ModuleTSX extends EventTarget {
         }
       }
       const url = isRelativeSpecifier(id) ? new URL(id, this.baseUrl).href : id;
-      const code = await this.fetchCode(url);
+      const code = await this.fetchText(url);
       return this.importCode(url, code, options);
     } catch (error) {
       this.emit("import:error", { id, error });
@@ -85,11 +87,8 @@ export class ModuleTSX extends EventTarget {
   private getLoaderByResourceType(type: ResourceType): Loader {
     switch (type) {
       case "css":
-        if (this.cssStrategy === "link") {
-          return cssLinkLoader;
-        } else {
-          return cssLoader;
-        }
+        // return this.cssStrategy === "link" ? cssLinkLoader : cssLoader;
+        return cssLoader;
       case "css-module":
         return cssModuleLoader;
       case "esm":
@@ -130,13 +129,20 @@ export class ModuleTSX extends EventTarget {
     if (mappedSpecifier) {
       return mappedSpecifier;
     }
-    const getCssUrl = async (url: string) => {
-      const code = this.cssStrategy === "link" ? "" : await this.fetchCode(url);
-      return await this.transformSourceModule("css", url, code);
+    const getCssUrl = async (fullURL: string) => {
+      // const code = this.cssStrategy === "link" ? "" : await this.fetchCode(url);
+      return await this.transformSourceModule("css", fullURL, await this.fetchText(fullURL));
     };
     const toEsmSh = (specifier: string) => {
+      // this avoid we accidentally convert a package named xxx.css to a css file on esm.sh
+      const subpath = specifier.startsWith("@")
+        ? // @scope/pkg/subpath -> /subpath
+          specifier.split("/").slice(2).join("/")
+        : // pkg/subpath -> /subpath
+          specifier.split("/").slice(1).join("/");
+
       const url = `https://esm.sh/${specifier}`;
-      if (specifier.endsWith(".css")) {
+      if (subpath.endsWith(".css")) {
         return getCssUrl(url);
       }
       return url;
@@ -149,7 +155,7 @@ export class ModuleTSX extends EventTarget {
         const blobUrl = await this.transformSourceModule(
           "css-module",
           targetUrl.href,
-          await this.fetchCode(targetUrl.href),
+          await this.fetchText(targetUrl.href),
         );
         return blobUrl;
       } else if (targetUrl.pathname.endsWith(".css")) {
@@ -159,7 +165,7 @@ export class ModuleTSX extends EventTarget {
         // so we just return the original full URL
         return targetUrl.href;
       } else {
-        const blobUrl = await this.transformSourceModule("esm", targetUrl.href, await this.fetchCode(targetUrl.href));
+        const blobUrl = await this.transformSourceModule("esm", targetUrl.href, await this.fetchText(targetUrl.href));
         //! ^ transformSourceModule is recursive ^
         return blobUrl;
       }

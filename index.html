@@ -18,11 +18,13 @@
     const { instance, ModuleTSX } = window.ModuleTSX; // the UMD global variable
     instance.addEventListener("*", (event) => {
       const { type, payload } = event.detail;
-      const el = Object.assign(document.createElement("pre"), {
-        innerText: `${type}: ${JSON.stringify(payload)}`,
-        style: `color: ${type.endsWith(":error") ? "#f00" : "#888"}; font-size: 12px; margin: 0; padding: 0;`,
-      });
-      document.getElementById("root").appendChild(el);
+
+      document.getElementById("root").appendChild(
+        Object.assign(document.createElement("pre"), {
+          innerText: `${type}: ${JSON.stringify(payload)}`,
+          style: `color: ${type.endsWith(":error") ? "#f00" : "#888"}; font-size: 12px; margin: 0; padding: 0;`,
+        }),
+      );
     });
   </script>
 </html>
