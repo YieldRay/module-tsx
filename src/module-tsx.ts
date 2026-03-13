@@ -12,7 +12,29 @@ import {
 import { addReactImport, needsReactImport } from "./react.ts";
 import { createSourceFile, printSourceFile, transform } from "./ts.ts";
 
-export class ModuleTSX extends EventTarget {
+interface ModuleTSXConfig {
+  baseUrl?: string;
+  fetch?: (fullURL: string) => Promise<Response>;
+  importMap?: ImportMapData;
+  // cssStrategy?: "style" | "link";
+}
+
+interface ModuleTSXEventMap {
+  import: CustomEvent<{ id: string }>;
+  "import:error": CustomEvent<{ id: string; error: any }>;
+  transform: CustomEvent<{ sourceUrl: string }>;
+  "transform:error": CustomEvent<{ sourceUrl: string; error: any }>;
+}
+
+interface IModuleTSX extends EventTarget {
+  addEventListener<T extends keyof ModuleTSXEventMap>(
+    type: T,
+    listener: (this: ModuleTSX, ev: ModuleTSXEventMap[T]) => any,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+}
+
+export class ModuleTSX extends EventTarget implements IModuleTSX {
   public readonly baseUrl: string;
   public readonly importMap: ImportMapData;
   public readonly fetch: (url: string) => Promise<Response>;
@@ -20,20 +42,14 @@ export class ModuleTSX extends EventTarget {
     return this.fetch(url).then((res) => res.text());
   };
 
-  constructor(config?: {
-    baseUrl?: string;
-    /** A simplified fetch function, since we do not need pass any header or other options */
-    fetch?: (fullURL: string) => Promise<Response>;
-    importMap?: ImportMapData;
-    cssStrategy?: "style" | "link";
-  }) {
+  constructor(config?: ModuleTSXConfig) {
     super();
     this.baseUrl = config?.baseUrl ?? location.href;
     this.importMap = config?.importMap ?? parseImportMaps();
     this.fetch = config?.fetch ?? fetchResponse;
   }
 
-  private emit(type: string, detail?: any) {
+  private emit<T extends keyof ModuleTSXEventMap>(type: T, detail?: ModuleTSXEventMap[T]["detail"]) {
     this.dispatchEvent(new CustomEvent(type, { detail }));
     this.dispatchEvent(
       new CustomEvent("*", {

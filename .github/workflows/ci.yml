@@ -61,6 +61,7 @@ jobs:
         run: |
           gh release delete v0.0.0 --yes || true
           git push --delete origin v0.0.0 || true
+          git tag -d v0.0.0 || true
 
       - name: Create new release
         env:
