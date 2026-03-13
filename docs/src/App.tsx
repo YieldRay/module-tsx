@@ -17,11 +17,11 @@ import {
   mdiSendVariantOutline,
   mdiShare,
 } from "@mdi/js";
-import Icon from "@mdi/react";
+import { Icon } from "./Icon.tsx";
 import {
   BottomAppBar,
   BottomSheet,
-  BottomSheetHandle,
+  type BottomSheetHandle,
   Button,
   Card,
   Checkbox,
