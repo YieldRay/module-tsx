@@ -10,6 +10,7 @@ import {
   isRelativeSpecifier,
 } from "./specifier.ts";
 import { addReactImport, needsReactImport } from "./react.ts";
+import { SourceTransformTracker } from "./source-tracker.ts";
 import { createSourceFile, printSourceFile, transform } from "./ts.ts";
 
 interface ModuleTSXConfig {
@@ -38,6 +39,7 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
   public readonly baseUrl: string;
   public readonly importMap: ImportMapData;
   public readonly fetch: (url: string) => Promise<Response>;
+  private readonly sourceTracker = new SourceTransformTracker<ResourceType>();
   private readonly fetchText = async (url: string) => {
     return this.fetch(url).then((res) => res.text());
   };
@@ -89,15 +91,19 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
 
   /** Transform module source code and return a blob URL with the transformed content */
   private async transformSourceModule(sourceType: ResourceType, sourceUrl: string, sourceCode: string) {
-    if (this._sourceMap.has(sourceUrl)) {
-      return this._sourceMap.get(sourceUrl)!;
+    const cachedBlobUrl = this.sourceTracker.get(sourceType, sourceUrl);
+    if (cachedBlobUrl) {
+      return cachedBlobUrl;
     }
-    const loader = this.getLoaderByResourceType(sourceType);
-    const code = `import.meta.url=${JSON.stringify(sourceUrl)};\n` + (await loader(sourceUrl, sourceCode));
-    const blob = new Blob([code], { type: "text/javascript" });
-    const blobUrl = URL.createObjectURL(blob);
-    this._track(sourceUrl, blobUrl);
-    return blobUrl;
+
+    return this.sourceTracker.runWithDedup(sourceType, sourceUrl, async () => {
+      const loader = this.getLoaderByResourceType(sourceType);
+      const code = `import.meta.url=${JSON.stringify(sourceUrl)};\n` + (await loader(sourceUrl, sourceCode));
+      const blob = new Blob([code], { type: "text/javascript" });
+      const blobUrl = URL.createObjectURL(blob);
+      this.sourceTracker.set(sourceType, sourceUrl, blobUrl);
+      return blobUrl;
+    });
   }
 
   private getLoaderByResourceType(type: ResourceType): Loader {
@@ -211,12 +217,6 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
     return resolved;
   }
 
-  private _sourceMap: Map<string, string> = new Map<string, string>();
-  private _blobMap: Map<string, string> = new Map<string, string>();
-  private _track(sourceUrl: string, blobUrl: string) {
-    this._sourceMap.set(sourceUrl, blobUrl);
-    this._blobMap.set(blobUrl, sourceUrl);
-  }
 }
 
 type ResourceType = "esm" | "css" | "css-module";

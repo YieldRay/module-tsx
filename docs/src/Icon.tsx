@@ -1,7 +1,7 @@
 import { forwardRef, useId } from "react";
 import type { CSSProperties, SVGProps } from "react";
 
-// export { default as Stack } from "./Stack";
+export { default as Stack } from "./Stack.tsx";
 
 export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "path" | "color" | "rotate"> {
   path: string;
