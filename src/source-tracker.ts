@@ -12,10 +12,15 @@ export class SourceTransformTracker<TSourceType extends string> {
     this.blobMap.set(blobUrl, sourceUrl);
   }
 
+  public isInFlight(sourceType: TSourceType, sourceUrl: string): boolean {
+    return this.inFlightSourceMap.has(this.getSourceKey(sourceType, sourceUrl));
+  }
+
   public getSourceUrlByBlob(blobUrl: string): string | undefined {
     return this.blobMap.get(blobUrl);
   }
 
+  /** Deduplicates concurrent transforms for the same URL. */
   public runWithDedup(
     sourceType: TSourceType,
     sourceUrl: string,
@@ -30,9 +35,11 @@ export class SourceTransformTracker<TSourceType extends string> {
     const task = run();
     this.inFlightSourceMap.set(sourceKey, task);
 
-    return task.finally(() => {
+    task.finally(() => {
       this.inFlightSourceMap.delete(sourceKey);
     });
+
+    return task;
   }
 
   private getSourceKey(sourceType: TSourceType, sourceUrl: string): string {

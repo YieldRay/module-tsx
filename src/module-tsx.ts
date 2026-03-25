@@ -204,6 +204,11 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
         // so we just return the original full URL
         return targetUrl.href;
       } else {
+        // If this URL is already being transformed (circular import), return the raw URL.
+        // The browser handles circular ESM natively; we just need to avoid deadlocking.
+        if (this.sourceTracker.isInFlight("esm", targetUrl.href)) {
+          return targetUrl.href;
+        }
         const blobUrl = await this.transformSourceModule("esm", targetUrl.href, await this.fetchText(targetUrl.href));
         //! ^ transformSourceModule is recursive ^
         return blobUrl;
