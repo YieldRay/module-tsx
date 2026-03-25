@@ -1,6 +1,6 @@
 {
   "name": "module-tsx",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "type": "module",
   "files": [
     "dist"
@@ -15,7 +15,7 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "tsdown": "^0.20.3"
+    "tsdown": "^0.21.5"
   },
   "author": "YieldRay",
   "license": "MIT",

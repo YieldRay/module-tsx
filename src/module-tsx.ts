@@ -14,10 +14,21 @@ import { SourceTransformTracker } from "./source-tracker.ts";
 import { createSourceFile, printSourceFile, transform } from "./ts.ts";
 
 interface ModuleTSXConfig {
+  /**
+   * The base URL to resolve relative module specifiers.
+   * This is typically the URL of the main script or the HTML page.
+   */
   baseUrl?: string;
   fetch?: (fullURL: string) => Promise<Response>;
   importMap?: ImportMapData;
   // cssStrategy?: "style" | "link";
+  /**
+   * Given a bare specifier, return a full URL to load the module.
+   * This can be used to convert for example import "react" to import "https://esm.sh/react".
+   * If not provided, it will default to using "https://esm.sh/" as the base URL for bare specifiers.
+   * @default "https://esm.sh/"
+   */
+  resolveBareSpecifier?: string | ((specifier: string) => string | Promise<string>);
 }
 
 interface ModuleTSXEventMap {
@@ -39,6 +50,7 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
   public readonly baseUrl: string;
   public readonly importMap: ImportMapData;
   public readonly fetch: (url: string) => Promise<Response>;
+  public readonly resolveBareSpecifier?: string | ((specifier: string) => string | Promise<string>);
   private readonly sourceTracker = new SourceTransformTracker<ResourceType>();
   private readonly fetchText = async (url: string) => {
     return this.fetch(url).then((res) => res.text());
@@ -49,6 +61,7 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
     this.baseUrl = config?.baseUrl ?? location.href;
     this.importMap = config?.importMap ?? parseImportMaps();
     this.fetch = config?.fetch ?? fetchResponse;
+    this.resolveBareSpecifier = config?.resolveBareSpecifier;
   }
 
   private emit<T extends keyof ModuleTSXEventMap>(type: T, detail?: ModuleTSXEventMap[T]["detail"]) {
@@ -71,7 +84,11 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
         if (mappedSpecifier) {
           id = mappedSpecifier;
         } else {
-          id = new URL(id, "https://esm.sh/").href;
+          if (typeof this.resolveBareSpecifier === "function") {
+            id = await this.resolveBareSpecifier(id);
+          } else {
+            id = (this.resolveBareSpecifier ?? "https://esm.sh/") + id;
+          }
         }
       }
       const url = isRelativeSpecifier(id) ? new URL(id, this.baseUrl).href : id;
@@ -216,7 +233,6 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
     await Promise.all(tasks);
     return resolved;
   }
-
 }
 
 type ResourceType = "esm" | "css" | "css-module";
