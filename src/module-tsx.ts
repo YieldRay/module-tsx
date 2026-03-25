@@ -28,7 +28,7 @@ interface ModuleTSXConfig {
    * If not provided, it will default to using "https://esm.sh/" as the base URL for bare specifiers.
    * @default "https://esm.sh/"
    */
-  resolveBareSpecifier?: string | ((specifier: string) => string | Promise<string>);
+  resolveBareSpecifier?: string | ((specifier: string) => string);
 }
 
 interface ModuleTSXEventMap {
@@ -50,7 +50,7 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
   public readonly baseUrl: string;
   public readonly importMap: ImportMapData;
   public readonly fetch: (url: string) => Promise<Response>;
-  public readonly resolveBareSpecifier?: string | ((specifier: string) => string | Promise<string>);
+  public readonly resolveBareSpecifier: (specifier: string) => string;
   private readonly sourceTracker = new SourceTransformTracker<ResourceType>();
   private readonly fetchText = async (url: string) => {
     return this.fetch(url).then((res) => res.text());
@@ -61,7 +61,10 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
     this.baseUrl = config?.baseUrl ?? location.href;
     this.importMap = config?.importMap ?? parseImportMaps();
     this.fetch = config?.fetch ?? fetchResponse;
-    this.resolveBareSpecifier = config?.resolveBareSpecifier;
+    this.resolveBareSpecifier =
+      typeof config?.resolveBareSpecifier === "function"
+        ? config?.resolveBareSpecifier
+        : (specifier: string) => (config?.resolveBareSpecifier ?? "https://esm.sh/") + specifier;
   }
 
   private emit<T extends keyof ModuleTSXEventMap>(type: T, detail?: ModuleTSXEventMap[T]["detail"]) {
@@ -84,11 +87,7 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
         if (mappedSpecifier) {
           id = mappedSpecifier;
         } else {
-          if (typeof this.resolveBareSpecifier === "function") {
-            id = await this.resolveBareSpecifier(id);
-          } else {
-            id = (this.resolveBareSpecifier ?? "https://esm.sh/") + id;
-          }
+          id = this.resolveBareSpecifier(id);
         }
       }
       const url = isRelativeSpecifier(id) ? new URL(id, this.baseUrl).href : id;
@@ -172,7 +171,7 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
       // const code = this.cssStrategy === "link" ? "" : await this.fetchCode(url);
       return await this.transformSourceModule("css", fullURL, await this.fetchText(fullURL));
     };
-    const toEsmSh = (specifier: string) => {
+    const toCDNUrl = (specifier: string) => {
       // this avoid we accidentally convert a package named xxx.css to a css file on esm.sh
       const subpath = specifier.startsWith("@")
         ? // @scope/pkg/subpath -> /subpath
@@ -180,8 +179,9 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
         : // pkg/subpath -> /subpath
           specifier.split("/").slice(1).join("/");
 
-      const url = `https://esm.sh/${specifier}`;
+      const url = this.resolveBareSpecifier(specifier);
       if (subpath.endsWith(".css")) {
+        // if the subpath (not the package name) ends with .css, we treat it as a css file
         return getCssUrl(url);
       }
       return url;
@@ -216,9 +216,9 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
     } else if (specifier.startsWith("node:")) {
       return `https://raw.esm.sh/@jspm/core/nodelibs/browser/${specifier.slice(5)}.js`;
     } else if (specifier.startsWith("npm:")) {
-      return toEsmSh(specifier.slice(4));
+      return toCDNUrl(specifier.slice(4));
     } else if (isBareSpecifier(specifier)) {
-      return toEsmSh(specifier);
+      return toCDNUrl(specifier);
     } else {
       // Fallback: return the original specifier
       return specifier;
