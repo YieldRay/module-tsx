@@ -1,0 +1,32 @@
+@import url("https://fonts.upset.dev/css2?family=Roboto:wght@100;200;300;400;500;700;900&display=swap");
+
+:root {
+  font-family: "Roboto", sans-serif;
+}
+
+body {
+  margin: 0;
+  user-select: none;
+}
+
+[class*="shj-lang-"] {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-family:
+    "SF Mono",
+    SF Mono,
+    SF Mono,
+    Consolas,
+    "Liberation Mono",
+    Menlo,
+    Courier,
+    monospace !important;
+
+  & > div {
+    padding: 1rem !important;
+  }
+}
+
+ 
