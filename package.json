@@ -5,9 +5,9 @@
   "files": [
     "dist"
   ],
-  "main": "dist/index.mjs",
-  "types": "dist/index.d.mts",
-  "unpkg": "dist/index.umd.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "browser": "dist/index.mjs",
   "scripts": {
     "build": "tsdown"
   },
@@ -15,6 +15,7 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@types/node": "^24.12.0",
     "tsdown": "^0.20.3"
   },
   "author": "YieldRay",
