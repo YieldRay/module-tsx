@@ -1,4 +1,13 @@
 import React, { useState, useEffect } from "react";
+import {
+  mdiRocketLaunch,
+  mdiFlash,
+  mdiLanguageTypescript,
+  mdiFileCode,
+  mdiPalette,
+  mdiApi,
+  mdiPlayCircleOutline,
+} from "@mdi/js";
 import Layout from "./components/Layout.tsx";
 import GettingStarted from "./pages/GettingStarted.tsx";
 import BasicUsage from "./pages/BasicUsage.tsx";
@@ -11,6 +20,7 @@ import Examples from "./pages/Examples.tsx";
 export interface NavItem {
   label: string;
   hash: string;
+  icon: string;
   component: React.ComponentType;
 }
 
@@ -23,23 +33,23 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Introduction",
     items: [
-      { label: "Getting Started", hash: "#getting-started", component: GettingStarted },
-      { label: "Basic Usage", hash: "#basic-usage", component: BasicUsage },
+      { label: "Getting Started", hash: "#getting-started", icon: mdiRocketLaunch, component: GettingStarted },
+      { label: "Basic Usage", hash: "#basic-usage", icon: mdiFlash, component: BasicUsage },
     ],
   },
   {
     title: "Features",
     items: [
-      { label: "TypeScript Support", hash: "#typescript", component: TypeScriptSupport },
-      { label: "Loading Files", hash: "#loading-files", component: LoadingFiles },
-      { label: "CSS & CSS Modules", hash: "#css-modules", component: CssModules },
+      { label: "TypeScript Support", hash: "#typescript", icon: mdiLanguageTypescript, component: TypeScriptSupport },
+      { label: "Loading Files", hash: "#loading-files", icon: mdiFileCode, component: LoadingFiles },
+      { label: "CSS & CSS Modules", hash: "#css-modules", icon: mdiPalette, component: CssModules },
     ],
   },
   {
     title: "Reference",
     items: [
-      { label: "API Reference", hash: "#api-reference", component: ApiReference },
-      { label: "Examples", hash: "#examples", component: Examples },
+      { label: "API Reference", hash: "#api-reference", icon: mdiApi, component: ApiReference },
+      { label: "Examples", hash: "#examples", icon: mdiPlayCircleOutline, component: Examples },
     ],
   },
 ];

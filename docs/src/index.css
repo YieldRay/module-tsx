@@ -6,7 +6,47 @@
 
 body {
   margin: 0;
-  user-select: none;
+}
+
+article {
+  & h1, & h2, & h3, & h4 {
+    font-weight: 700;
+    line-height: 1.25;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+  }
+
+  & h1 { font-size: 2.25rem; margin-top: 0; }
+  & h2 { font-size: 1.5rem; }
+  & h3 { font-size: 1.25rem; }
+  & h4 { font-size: 1rem; }
+
+  & p {
+    margin-top: 0;
+    margin-bottom: 1em;
+    line-height: 1.7;
+  }
+
+  & a {
+    color: var(--md-sys-color-primary);
+    text-decoration: underline;
+  }
+
+  & code {
+    font-size: 0.875em;
+    background: var(--md-sys-color-surface-container);
+    padding: 0.15em 0.35em;
+    border-radius: 4px;
+  }
+
+  & ul, & ol {
+    padding-left: 1.5em;
+    margin-bottom: 1em;
+  }
+
+  & li {
+    margin-bottom: 0.25em;
+  }
 }
 
 [class*="shj-lang-"] {
@@ -15,18 +55,18 @@ body {
   padding: 0 !important;
   margin: 0 !important;
   font-family:
-    "SF Mono",
-    SF Mono,
-    SF Mono,
-    Consolas,
-    "Liberation Mono",
-    Menlo,
-    Courier,
+    "SF Mono",        /* macOS/iOS */
+    ui-monospace,     /* Safari 13.1+ generic */
+    "Cascadia Code",  /* Windows 11 */
+    "Cascadia Mono",  /* Windows Terminal */
+    Consolas,         /* Windows */
+    "Roboto Mono",    /* Android / Chrome OS */
+    "Liberation Mono",/* Linux (Red Hat / Fedora) */
+    "DejaVu Sans Mono",/* Linux (Ubuntu / Debian) */
+    Menlo,            /* macOS (older) */
     monospace !important;
 
   & > div {
     padding: 1rem !important;
   }
 }
-
- 

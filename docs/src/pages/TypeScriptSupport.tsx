@@ -1,84 +1,58 @@
 import React from "react";
 import CodeBlock from "../components/CodeBlock.tsx";
 
-const TS_EXAMPLE = `import React, { useState } from "react";
+const BASIC_EXAMPLE = `<script type="module-tsx">
+  import React from "react";
+  import { createRoot } from "react-dom/client";
 
-interface User {
-  id: number;
-  name: string;
-  role: "admin" | "user";
-}
+  interface User {
+    id: number;
+    name: string;
+  }
 
-function UserCard({ user }: { user: User }) {
-  return (
-    <div>
-      <h3>{user.name}</h3>
-      <span style={{ color: user.role === "admin" ? "red" : "inherit" }}>
-        {user.role}
-      </span>
-    </div>
-  );
-}
+  function App() {
+    const users: User[] = [
+      { id: 1, name: "Alice" },
+      { id: 2, name: "Bob" },
+    ];
+    return <ul>{users.map(u => <li key={u.id}>{u.name}</li>)}</ul>;
+  }
 
-function App() {
-  const [users] = useState<User[]>([
-    { id: 1, name: "Alice", role: "admin" },
-    { id: 2, name: "Bob",   role: "user"  },
-  ]);
-  return (
-    <ul>
-      {users.map(u => <li key={u.id}><UserCard user={u} /></li>)}
-    </ul>
-  );
-}`;
+  createRoot(document.getElementById("root")!).render(<App />);
+</script>`;
 
-const GENERICS_EXAMPLE = `function identity<T>(value: T): T {
-  return value;
-}
-
-// Type assertions work too
-const el = document.getElementById("root") as HTMLDivElement;`;
-
-const ENUM_EXAMPLE = `// const enums are supported
-const enum Direction {
-  Up = "UP",
-  Down = "DOWN",
-}
-
-const dir: Direction = Direction.Up;`;
+const IMPORT_EXAMPLE = `<!-- Entry file can import local .ts / .tsx files -->
+<script type="module-tsx" src="./src/main.tsx"></script>`;
 
 export default function TypeScriptSupport() {
   return (
     <article>
-      <h1 className="text-4xl font-bold mt-0">TypeScript Support</h1>
-      <p className="text-lg leading-relaxed text-[var(--md-sys-color-on-surface-variant)]">
-        module-tsx uses the TypeScript compiler to transpile your code in the browser. All
-        TypeScript syntax is supported.
+      <h1>TypeScript Support</h1>
+      <p>
+        module-tsx uses the TypeScript compiler (running in the browser) to transpile your code
+        before execution. You can write full TypeScript syntax — interfaces, generics, enums,
+        type assertions — directly inside <code>{"<script type=\"module-tsx\">"}</code> tags or
+        in <code>.ts</code> / <code>.tsx</code> files.
       </p>
 
-      <h2>Type Annotations & Interfaces</h2>
+      <h2>How It Works</h2>
       <p>
-        Full TypeScript syntax including interfaces, type aliases, generics, and union types:
-      </p>
-      <CodeBlock code={TS_EXAMPLE} language="tsx" />
-
-      <h2>Generics & Type Assertions</h2>
-      <CodeBlock code={GENERICS_EXAMPLE} language="tsx" />
-
-      <h2>Enums</h2>
-      <CodeBlock code={ENUM_EXAMPLE} language="tsx" />
-
-      <h2>Runtime Behavior</h2>
-      <p>
-        Type errors are <strong>silently ignored</strong> at runtime — module-tsx transpiles
-        with <code>noCheck: true</code>, matching the behavior of Babel and esbuild. Your code
-        runs even if it has type errors. Use your editor (VS Code, etc.) for type checking during
-        development.
+        Transpilation runs with <code>noCheck: true</code>, so type errors are silently ignored
+        at runtime — matching the behavior of Babel and esbuild. Your code runs even if it has
+        type errors. Use your editor for type checking during development.
       </p>
       <p>
         JSX is automatically detected. If your code uses JSX without importing React,
-        module-tsx will inject <code>import React from "react"</code> automatically.
+        module-tsx injects <code>import React from "react"</code> automatically.
       </p>
+      <CodeBlock code={BASIC_EXAMPLE} language="html" filename="index.html" />
+
+      <h2>External .ts / .tsx Files</h2>
+      <p>
+        The <code>src</code> attribute accepts <code>.ts</code> and <code>.tsx</code> files.
+        Relative imports inside those files are also fetched, compiled, and cached as Blob URLs.
+      </p>
+      <CodeBlock code={IMPORT_EXAMPLE} language="html" />
     </article>
   );
 }
