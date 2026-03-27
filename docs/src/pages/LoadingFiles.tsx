@@ -40,6 +40,11 @@ export default function LoadingFiles() {
         relative paths. Each file is fetched via HTTP, compiled, and cached as a Blob URL.
         Circular imports are handled safely.
       </p>
+      <p>
+        <strong>File extensions are required.</strong> Unlike bundlers that resolve bare paths,
+        module-tsx fetches files directly over HTTP — so you must include the full extension:{" "}
+        <code>import App from "./App.tsx"</code>, not <code>import App from "./App"</code>.
+      </p>
       <CodeBlock code={RELATIVE_IMPORT} language="tsx" />
 
       <h2>npm Packages</h2>
