@@ -73,11 +73,11 @@ export default function TabsDemo() {
 function Counter() {
   const [count, setCount] = useState(0);
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+    <div className="flex items-center gap-4">
       <Button variant="outlined" onClick={() => setCount((c) => c - 1)}>
         -
       </Button>
-      <span style={{ fontSize: "1.5rem", minWidth: 40, textAlign: "center" }}>{count}</span>
+      <span className="text-2xl min-w-10 text-center">{count}</span>
       <Button onClick={() => setCount((c) => c + 1)}>+</Button>
     </div>
   );
@@ -100,7 +100,7 @@ function LoginForm() {
         e.preventDefault();
         setSubmitted(true);
       }}
-      style={{ display: "flex", flexDirection: "column", gap: "1rem", maxWidth: 320 }}
+      className="flex flex-col gap-4 max-w-xs"
     >
       <TextField
         labelText="Email"
@@ -128,7 +128,7 @@ function TabsDemo() {
   return (
     <div>
       <Tabs value={active} onChange={setActive} items={tabs} variant="secondary" />
-      <p style={{ padding: "1rem 0" }}>{content[active]}</p>
+      <p className="py-4">{content[active]}</p>
     </div>
   );
 }
@@ -137,14 +137,14 @@ function ProgressDemo() {
   const [value, setValue] = useState(0.4);
   const [indeterminate, setIndeterminate] = useState(false);
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+    <div className="flex flex-col gap-4">
       <LinearProgressIndicator value={indeterminate ? undefined : value} />
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+      <div className="flex items-center gap-4">
         <Switch
           checked={indeterminate}
           onClick={() => setIndeterminate((v) => !v)}
         />
-        <span style={{ fontSize: 14 }}>Indeterminate</span>
+        <span className="text-sm">Indeterminate</span>
       </div>
       {!indeterminate && (
         <input
@@ -154,7 +154,7 @@ function ProgressDemo() {
           step={0.01}
           value={value}
           onInput={(e) => setValue(parseFloat((e.target as HTMLInputElement).value))}
-          style={{ width: "100%" }}
+          className="w-full"
         />
       )}
     </div>
@@ -164,14 +164,8 @@ function ProgressDemo() {
 export default function Examples() {
   return (
     <article>
-      <h1 style={{ fontSize: "2.25rem", fontWeight: 700, marginTop: 0 }}>Examples</h1>
-      <p
-        style={{
-          fontSize: "1.1rem",
-          lineHeight: 1.7,
-          color: "var(--md-sys-color-on-surface-variant)",
-        }}
-      >
+      <h1 className="text-4xl font-bold mt-0">Examples</h1>
+      <p className="text-lg leading-relaxed text-[var(--md-sys-color-on-surface-variant)]">
         Live interactive demos — these components are running via module-tsx right now.
       </p>
 

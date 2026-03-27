@@ -115,7 +115,7 @@ const eventRows = [
 export default function ApiReference() {
   return (
     <article>
-      <h1 style={{ fontSize: "2.25rem", fontWeight: 700, marginTop: 0 }}>API Reference</h1>
+      <h1 className="text-4xl font-bold mt-0">API Reference</h1>
 
       <h2>
         <code>new ModuleTSX(config?)</code>
@@ -128,7 +128,7 @@ export default function ApiReference() {
       <CodeBlock code={CONSTRUCTOR_EXAMPLE} language="tsx" />
 
       <h3>Config Options</h3>
-      <div className="sd-scrollbar" style={{ overflowX: "auto", margin: "1rem 0" }}>
+      <div className="sd-scrollbar overflow-x-auto my-4">
         <Table style={{ width: "100%" }}>
           <thead>
             <tr>
@@ -176,7 +176,7 @@ export default function ApiReference() {
       </p>
       <CodeBlock code={EVENTS_EXAMPLE} language="tsx" />
 
-      <div className="sd-scrollbar" style={{ overflowX: "auto", margin: "1rem 0" }}>
+      <div className="sd-scrollbar overflow-x-auto my-4">
         <Table style={{ width: "100%" }}>
           <thead>
             <tr>

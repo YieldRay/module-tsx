@@ -38,7 +38,7 @@ const APP_TSX = `export default function App() {
 export default function BasicUsage() {
   return (
     <article>
-      <h1 style={{ fontSize: "2.25rem", fontWeight: 700, marginTop: 0 }}>Basic Usage</h1>
+      <h1 className="text-4xl font-bold mt-0">Basic Usage</h1>
 
       <h2>Inline Scripts</h2>
       <p>
