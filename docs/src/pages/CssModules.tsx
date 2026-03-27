@@ -41,14 +41,8 @@ const CSS_MODULE_FILE = `/* Button.module.css */
 export default function CssModules() {
   return (
     <article>
-      <h1 style={{ fontSize: "2.25rem", fontWeight: 700, marginTop: 0 }}>CSS & CSS Modules</h1>
-      <p
-        style={{
-          fontSize: "1.1rem",
-          lineHeight: 1.7,
-          color: "var(--md-sys-color-on-surface-variant)",
-        }}
-      >
+      <h1 className="text-4xl font-bold mt-0">CSS & CSS Modules</h1>
+      <p className="text-lg leading-relaxed text-[var(--md-sys-color-on-surface-variant)]">
         module-tsx handles both regular CSS imports and CSS Modules out of the box.
       </p>
 

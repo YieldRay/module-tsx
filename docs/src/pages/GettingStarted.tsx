@@ -34,14 +34,8 @@ python3 -m http.server 8080`;
 export default function GettingStarted() {
   return (
     <article>
-      <h1 style={{ fontSize: "2.25rem", fontWeight: 700, marginTop: 0 }}>Getting Started</h1>
-      <p
-        style={{
-          fontSize: "1.1rem",
-          lineHeight: 1.7,
-          color: "var(--md-sys-color-on-surface-variant)",
-        }}
-      >
+      <h1 className="text-4xl font-bold mt-0">Getting Started</h1>
+      <p className="text-lg leading-relaxed text-[var(--md-sys-color-on-surface-variant)]">
         <strong>module-tsx</strong> lets you run TypeScript and React directly in the browser —
         no build step, no npm install, no bundler required. You publish source code and users run
         it instantly.

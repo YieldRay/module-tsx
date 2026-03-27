@@ -8,7 +8,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
   render() {
     if (this.state.error) {
       return (
-        <div style={{ padding: "1rem", color: "red", fontFamily: "monospace", fontSize: 12 }}>
+        <div className="p-4 text-red-500 font-mono text-xs">
           Error: {(this.state.error as Error).message}
         </div>
       );
@@ -24,34 +24,13 @@ interface DemoProps {
 
 export default function Demo({ title, children }: DemoProps) {
   return (
-    <div
-      style={{
-        border: "1px solid var(--md-sys-color-outline-variant)",
-        borderRadius: 8,
-        overflow: "hidden",
-        margin: "1rem 0",
-      }}
-    >
+    <div className="border border-[var(--md-sys-color-outline-variant)] rounded-lg overflow-hidden my-4">
       {title && (
-        <div
-          style={{
-            padding: "8px 16px",
-            fontSize: 12,
-            fontWeight: 600,
-            background: "var(--md-sys-color-surface-container)",
-            borderBottom: "1px solid var(--md-sys-color-outline-variant)",
-            color: "var(--md-sys-color-on-surface-variant)",
-          }}
-        >
+        <div className="px-4 py-2 text-xs font-semibold bg-[var(--md-sys-color-surface-container)] border-b border-[var(--md-sys-color-outline-variant)] text-[var(--md-sys-color-on-surface-variant)]">
           {title}
         </div>
       )}
-      <div
-        style={{
-          padding: "1.5rem",
-          background: "var(--md-sys-color-surface)",
-        }}
-      >
+      <div className="p-6 bg-[var(--md-sys-color-surface)]">
         <ErrorBoundary>{children}</ErrorBoundary>
       </div>
     </div>

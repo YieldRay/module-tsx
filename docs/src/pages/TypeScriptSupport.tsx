@@ -50,14 +50,8 @@ const dir: Direction = Direction.Up;`;
 export default function TypeScriptSupport() {
   return (
     <article>
-      <h1 style={{ fontSize: "2.25rem", fontWeight: 700, marginTop: 0 }}>TypeScript Support</h1>
-      <p
-        style={{
-          fontSize: "1.1rem",
-          lineHeight: 1.7,
-          color: "var(--md-sys-color-on-surface-variant)",
-        }}
-      >
+      <h1 className="text-4xl font-bold mt-0">TypeScript Support</h1>
+      <p className="text-lg leading-relaxed text-[var(--md-sys-color-on-surface-variant)]">
         module-tsx uses the TypeScript compiler to transpile your code in the browser. All
         TypeScript syntax is supported.
       </p>

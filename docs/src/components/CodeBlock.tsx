@@ -41,34 +41,16 @@ export default function CodeBlock({ code, language = "tsx", filename }: CodeBloc
   };
 
   return (
-    <div
-      style={{
-        position: "relative",
-        borderRadius: 8,
-        margin: "1rem 0",
-        border: "1px solid var(--md-sys-color-outline-variant)",
-        fontSize: 13,
-      }}
-    >
+    <div className="relative rounded-lg my-4 border border-[var(--md-sys-color-outline-variant)] text-sm">
       {filename && (
-        <div
-          style={{
-            padding: "5px 12px",
-            fontSize: 12,
-            fontFamily: "monospace",
-            background: "var(--md-sys-color-surface-container)",
-            borderBottom: "1px solid var(--md-sys-color-outline-variant)",
-            color: "var(--md-sys-color-on-surface-variant)",
-            borderRadius: "8px 8px 0 0",
-          }}
-        >
+        <div className="px-3 py-1 text-xs font-mono bg-[var(--md-sys-color-surface-container)] border-b border-[var(--md-sys-color-outline-variant)] text-[var(--md-sys-color-on-surface-variant)] rounded-t-lg">
           {filename}
         </div>
       )}
-      <div style={{ position: "absolute", top: filename ? 28 : 4, right: 4, zIndex: 1 }}>
+      <div className={`absolute ${filename ? "top-7" : "top-1"} right-1 z-10`}>
         <IconButton path={copied ? mdiCheck : mdiContentCopy} size={0.8} onClick={handleCopy} />
       </div>
-      <code ref={codeRef} style={{ display: "block", overflowX: "auto", scrollbarWidth: "thin" }} />
+      <code ref={codeRef} className="block overflow-x-auto" style={{ scrollbarWidth: "thin" }} />
     </div>
   );
 }

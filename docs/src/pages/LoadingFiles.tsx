@@ -29,14 +29,8 @@ import React from "npm:react";`;
 export default function LoadingFiles() {
   return (
     <article>
-      <h1 style={{ fontSize: "2.25rem", fontWeight: 700, marginTop: 0 }}>Loading Files</h1>
-      <p
-        style={{
-          fontSize: "1.1rem",
-          lineHeight: 1.7,
-          color: "var(--md-sys-color-on-surface-variant)",
-        }}
-      >
+      <h1 className="text-4xl font-bold mt-0">Loading Files</h1>
+      <p className="text-lg leading-relaxed text-[var(--md-sys-color-on-surface-variant)]">
         module-tsx handles all kinds of import specifiers automatically.
       </p>
 
