@@ -72,7 +72,7 @@ jobs:
 
       - name: Publish to npm
         env:
-          NODE_AUTH_TOKEN: ${{ inputs.npm_token }}
+          NPM_TOKEN: ${{ inputs.npm_token }}
         run: npm publish --access public --provenance
 
       - name: Create and push tag
