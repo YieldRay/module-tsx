@@ -9,7 +9,6 @@ export default defineConfig([
   {
     dts: true,
     entry: { index: "./src/index.ts" },
-    sourcemap: true,
     format: "esm",
     platform: "browser",
     target: ["esnext"],
@@ -21,7 +20,6 @@ export default defineConfig([
   {
     dts: false,
     entry: { index: "./src/index.ts" },
-    sourcemap: true,
     format: "esm",
     platform: "browser",
     target: ["esnext"],
@@ -42,7 +40,6 @@ export default defineConfig([
   {
     dts: false,
     entry: { index: "./src/index.ts" },
-    sourcemap: true,
     format: "umd",
     platform: "browser",
     target: ["esnext"],
