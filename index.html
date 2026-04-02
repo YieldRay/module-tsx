@@ -13,9 +13,10 @@
       <pre style="color: #888; font-size: 12px; margin: 0; padding: 0">loading module-tsx library...</pre>
     </div>
   </body>
-  <script src="./dist/index.umd.js"></script>
-  <script>
-    const { instance, ModuleTSX } = window.ModuleTSX; // the UMD global variable
+  <!-- <script src="./dist/index.umd.js"></script> -->
+  <script type="module">
+    import { instance, ModuleTSX } from "./dist/index.mjs"; // the ESM module
+    // const { instance, ModuleTSX } = window.ModuleTSX; // the UMD global variable
     instance.addEventListener("*", (event) => {
       const { type, payload } = event.detail;
 

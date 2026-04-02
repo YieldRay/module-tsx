@@ -9,14 +9,16 @@
   "types": "dist/index.d.ts",
   "browser": "dist/index.mjs",
   "scripts": {
-    "build": "tsdown"
+    "build": "tsdown",
+    "test": "node --experimental-strip-types --test 'src/*.test.ts'"
   },
   "dependencies": {
     "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@types/node": "^24.12.0",
-    "tsdown": "^0.20.3"
+    "esbuild": "^0.27.5",
+    "tsdown": "^0.21.7"
   },
   "author": "YieldRay",
   "license": "MIT",
