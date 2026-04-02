@@ -29,7 +29,7 @@ async function sideEffect() {
       );
     }
     for (const key in ["integrity", "crossorigin"] as (keyof HTMLScriptElement)[]) {
-      if (script[key]) {
+      if (script[key as keyof HTMLScriptElement]) {
         warn(`script with type="${TYPE_ATTRIBUTE_VALUE}" does not support ${key} attribute.`);
       }
     }
@@ -42,4 +42,9 @@ async function sideEffect() {
   }
 }
 
+/**
+ * Since this module can be loaded as both ESM and UMD, we listen for DOMContentLoaded to ensure all type="module-tsx" tags are present.
+ * ESM scripts are always deferred, so the document is already fully parsed when this module executes and the listener fires immediately.
+ * Classic scripts run inline as the parser encounters them, so they must wait for DOMContentLoaded.
+ */
 document.addEventListener("DOMContentLoaded", sideEffect);

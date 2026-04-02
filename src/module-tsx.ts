@@ -32,9 +32,13 @@ interface ModuleTSXConfig {
 }
 
 interface ModuleTSXEventMap {
+  /** Fired when an import starts. `id` is the original specifier as passed by the caller. */
   import: CustomEvent<{ id: string }>;
+  /** Fired when an import fails. `id` is the specifier at the point of failure. */
   "import:error": CustomEvent<{ id: string; error: any }>;
+  /** Fired when a source file starts being transpiled. */
   transform: CustomEvent<{ sourceUrl: string }>;
+  /** Fired when transpilation fails. */
   "transform:error": CustomEvent<{ sourceUrl: string; error: any }>;
 }
 
@@ -42,6 +46,11 @@ interface IModuleTSX extends EventTarget {
   addEventListener<T extends keyof ModuleTSXEventMap>(
     type: T,
     listener: (this: ModuleTSX, ev: ModuleTSXEventMap[T]) => any,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
     options?: boolean | AddEventListenerOptions,
   ): void;
 }
@@ -100,9 +109,13 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
   }
 
   public async importCode(sourceUrl: string, code: string, options?: any): Promise<any> {
-    const transformedUrl = await this.transformSourceModule("esm", sourceUrl, code);
-    const module = await import(transformedUrl, options);
-    return module;
+    try {
+      const transformedUrl = await this.transformSourceModule("esm", sourceUrl, code);
+      return await import(transformedUrl, options);
+    } catch (error) {
+      this.emit("import:error", { id: sourceUrl, error });
+      throw error;
+    }
   }
 
   /** Transform module source code and return a blob URL with the transformed content */
