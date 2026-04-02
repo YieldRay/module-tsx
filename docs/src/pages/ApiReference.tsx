@@ -2,7 +2,7 @@ import React from "react";
 import { Table } from "soda-material";
 import CodeBlock from "../components/CodeBlock.tsx";
 
-const CONSTRUCTOR_EXAMPLE = `import { ModuleTSX } from "https://yieldray.github.io/module-tsx/dist/index.mjs";
+const CONSTRUCTOR_EXAMPLE = `import { ModuleTSX } from "https://esm.sh/module-tsx";
 
 const instance = new ModuleTSX({
   baseUrl: "https://my-site.com/app/",
@@ -24,7 +24,7 @@ const code = \`
 const mod = await instance.importCode("https://my-site.com/", code);
 mod.greet("World"); // "Hello, World!"`;
 
-const EVENTS_EXAMPLE = `import { instance } from "https://yieldray.github.io/module-tsx/dist/index.mjs";
+const EVENTS_EXAMPLE = `import { instance } from "https://esm.sh/module-tsx";
 
 // Listen to all events
 instance.addEventListener("*", (e) => {
@@ -49,18 +49,18 @@ instance.addEventListener("transform:error", (e) => {
 });`;
 
 const SINGLETON_EXAMPLE = `<!-- The singleton instance auto-processes <script type="module-tsx"> tags -->
-<script type="module" src="https://yieldray.github.io/module-tsx/dist/index.mjs"></script>
+<script type="module" src="https://esm.sh/module-tsx"></script>
 <script type="module-tsx" src="./src/main.tsx"></script>
 
 <!-- Access the singleton from another module script -->
 <script type="module">
-  import { instance } from "https://yieldray.github.io/module-tsx/dist/index.mjs";
+  import { instance } from "https://esm.sh/module-tsx";
   instance.addEventListener("transform", (e) => {
     console.log("Transformed:", e.detail.sourceUrl);
   });
 </script>`;
 
-const CUSTOM_CDN_EXAMPLE = `import { ModuleTSX } from "https://yieldray.github.io/module-tsx/dist/index.mjs";
+const CUSTOM_CDN_EXAMPLE = `import { ModuleTSX } from "https://esm.sh/module-tsx";
 
 // Use a string prefix (appended to bare specifier)
 const instance = new ModuleTSX({

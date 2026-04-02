@@ -31,7 +31,7 @@ export default function TypeScriptSupport() {
       <p>
         module-tsx uses the TypeScript compiler (running in the browser) to transpile your code
         before execution. You can write full TypeScript syntax — interfaces, generics, enums,
-        type assertions — directly inside <code>{"<script type=\"module-tsx\">"}</code> tags or
+        type assertions — directly inside <code>{`<script type="module-tsx">`}</code> tags or
         in <code>.ts</code> / <code>.tsx</code> files.
       </p>
 
