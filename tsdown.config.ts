@@ -1,8 +1,34 @@
-import { defineConfig } from "tsdown";
-import { createRequire } from "node:module";
+import { defineConfig, type UserConfig } from "tsdown";
+import * as esbuild from "esbuild";
 
-const require = createRequire(import.meta.url);
-const tsVersion: string = require("typescript/package.json").version;
+const esbuildTypescript = await esbuild.build({
+  entryPoints: ["node_modules/typescript/lib/typescript.js"],
+  bundle: true,
+  format: "esm",
+  platform: "browser",
+  minify: true,
+  write: false,
+});
+
+/**
+ * Rolldown cannot bundle TypeScript directly due to its use of Node.js-specific features and dynamic imports.
+ * To work around this, we pre-bundle TypeScript using esbuild, which can handle these features and produce a browser-compatible ESM bundle.
+ * We then create a custom plugin for tsdown that serves this pre-bundled TypeScript whenever the "typescript" module is imported.
+ */
+const bundleTypescriptPlugin: UserConfig["plugins"] = {
+  name: "bundle-typescript-with-esbuild",
+  resolveId: {
+    order: "pre",
+    handler(id: string) {
+      if (id === "typescript") return "virtual:typescript-esm";
+    },
+  },
+  async load(id: string) {
+    if (id === "virtual:typescript-esm") {
+      return esbuildTypescript.outputFiles[0].text;
+    }
+  },
+};
 
 export default defineConfig([
   // index.js — ESM, unbundled (external deps)
@@ -16,22 +42,16 @@ export default defineConfig([
       entryFileNames: "[name].js",
     },
   },
-  // index.mjs — ESM, bundled (typescript externalized to esm.sh for browser compatibility)
+  // index.mjs — ESM, bundled (typescript bundled via esbuild for browser compatibility)
   {
     dts: false,
     entry: { index: "./src/index.ts" },
     format: "esm",
     platform: "browser",
     target: ["esnext"],
-    noExternal: () => true,
-    plugins: [
-      {
-        name: "resolve-typescript-to-esm-sh",
-        resolveId(id) {
-          if (id === "typescript") return { id: `https://esm.sh/typescript@${tsVersion}`, external: true };
-        },
-      },
-    ],
+    deps: { alwaysBundle: (id) => id !== "typescript", onlyBundle: false },
+    minify: true,
+    plugins: bundleTypescriptPlugin,
     outputOptions: {
       entryFileNames: "[name].mjs",
     },
@@ -43,9 +63,9 @@ export default defineConfig([
     format: "umd",
     platform: "browser",
     target: ["esnext"],
-    noExternal: () => true,
-    inlineOnly: false,
+    deps: { alwaysBundle: (id) => id !== "typescript", onlyBundle: false },
     minify: true,
+    plugins: bundleTypescriptPlugin,
     outputOptions: {
       name: "ModuleTSX",
       entryFileNames: "[name].umd.js",
