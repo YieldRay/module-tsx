@@ -1,6 +1,6 @@
 import type ts from "typescript";
 import { ModuleTSXError } from "./error.ts";
-import { parseImportMaps, resolveFromImportMap, type ImportMapData } from "./importmap.ts";
+import { ImportMap, type SpecifierResolutionRecord } from "./importmap.ts";
 import { cssLoader, cssModuleLoader, type Loader } from "./loader.ts";
 import { fetchResponse } from "./network.ts";
 import {
@@ -20,7 +20,7 @@ interface ModuleTSXConfig {
    */
   baseUrl?: string;
   fetch?: (fullURL: string) => Promise<Response>;
-  importMap?: ImportMapData;
+  importMap?: ImportMap;
   // cssStrategy?: "style" | "link";
   /**
    * Given a bare specifier, return a full URL to load the module.
@@ -57,9 +57,10 @@ interface IModuleTSX extends EventTarget {
 
 export class ModuleTSX extends EventTarget implements IModuleTSX {
   public readonly baseUrl: string;
-  public readonly importMap: ImportMapData;
+  public readonly importMap: ImportMap;
   public readonly fetch: (url: string) => Promise<Response>;
   public readonly resolveBareSpecifier: (specifier: string) => string;
+  private readonly resolvedModuleSet: SpecifierResolutionRecord[] = [];
   private readonly sourceTracker = new SourceTransformTracker<ResourceType>();
   private readonly fetchText = async (url: string) => {
     return this.fetch(url).then((res) => res.text());
@@ -68,12 +69,18 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
   constructor(config?: ModuleTSXConfig) {
     super();
     this.baseUrl = config?.baseUrl ?? location.href;
-    this.importMap = config?.importMap ?? parseImportMaps();
+    this.importMap = config?.importMap ?? new ImportMap();
     this.fetch = config?.fetch ?? fetchResponse;
     this.resolveBareSpecifier =
       typeof config?.resolveBareSpecifier === "function"
         ? config?.resolveBareSpecifier
         : (specifier: string) => (config?.resolveBareSpecifier ?? "https://esm.sh/") + specifier;
+  }
+
+  /** Add a new import map, merging it into the existing one per the spec.
+   *  Rules that conflict with already-resolved modules are silently dropped. */
+  public addImportMap(newImportMap: ImportMap): void {
+    ImportMap.merge(this.importMap, newImportMap, this.resolvedModuleSet);
   }
 
   private emit<T extends keyof ModuleTSXEventMap>(type: T, detail?: ModuleTSXEventMap[T]["detail"]) {
@@ -92,9 +99,10 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
     this.emit("import", { id });
     try {
       if (isBareSpecifier(id)) {
-        const mappedSpecifier = resolveFromImportMap(id, this.importMap, this.baseUrl);
-        if (mappedSpecifier) {
-          id = mappedSpecifier;
+        const resolved = ImportMap.resolve(id, this.importMap, this.baseUrl);
+        if (resolved) {
+          this.resolvedModuleSet.push(resolved.record);
+          id = resolved.url;
         } else {
           id = this.resolveBareSpecifier(id);
         }
@@ -176,9 +184,10 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
   }
 
   private async resolveSpecifier(specifier: string, sourceUrl: string): Promise<string> {
-    const mappedSpecifier = resolveFromImportMap(specifier, this.importMap, sourceUrl);
-    if (mappedSpecifier) {
-      return mappedSpecifier;
+    const resolved = ImportMap.resolve(specifier, this.importMap, sourceUrl);
+    if (resolved) {
+      this.resolvedModuleSet.push(resolved.record);
+      return resolved.url;
     }
     const getCssUrl = async (fullURL: string) => {
       // const code = this.cssStrategy === "link" ? "" : await this.fetchCode(url);

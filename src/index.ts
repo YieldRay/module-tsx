@@ -1,12 +1,13 @@
 import { ModuleTSX } from "./module-tsx.ts";
 import { ModuleTSXError, warn } from "./error.ts";
-
+import { ImportMap } from "./importmap.ts";
+export { ImportMap } from "./importmap.ts";
 export { ModuleTSX, ModuleTSXError };
 
 /**
  * The singleton global instance of ModuleTSX.
  */
-export const instance = new ModuleTSX();
+export const instance = new ModuleTSX({ importMap: ImportMap.fromDOM() });
 
 const TYPE_ATTRIBUTE_VALUE = "module-tsx";
 async function sideEffect() {

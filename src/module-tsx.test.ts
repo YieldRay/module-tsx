@@ -1,6 +1,8 @@
 import { describe, it, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { ModuleTSX } from "./module-tsx.ts";
+import { ImportMap } from "./importmap.ts";
+
 
 // URL.createObjectURL returns blob: URLs which Node's ESM loader doesn't support.
 // patchBlobToDataUrl() replaces it with a registry that stores blob content keyed
@@ -40,30 +42,35 @@ function makeFetch(files: Record<string, string>) {
   };
 }
 
+const BASE = "https://example.com/";
+
+function parseMap(json: object, base = BASE) {
+  return ImportMap.parse(JSON.stringify(json), new URL(base));
+}
+
 // ─── tests ───────────────────────────────────────────────────────────────────
 
 describe("ModuleTSX constructor", () => {
   it("uses provided baseUrl", () => {
-    const m = new ModuleTSX({ baseUrl: "https://example.com/", importMap: {}, fetch: makeFetch({}) });
-    assert.equal(m.baseUrl, "https://example.com/");
+    const m = new ModuleTSX({ baseUrl: BASE, fetch: makeFetch({}) });
+    assert.equal(m.baseUrl, BASE);
   });
 
   it("uses provided importMap", () => {
-    const importMap = { imports: { react: "https://esm.sh/react" } };
-    const m = new ModuleTSX({ baseUrl: "https://example.com/", importMap, fetch: makeFetch({}) });
-    assert.deepEqual(m.importMap, importMap);
+    const importMap = parseMap({ imports: { react: "https://esm.sh/react" } });
+    const m = new ModuleTSX({ baseUrl: BASE, importMap, fetch: makeFetch({}) });
+    assert.equal(m.importMap, importMap);
   });
 
   it("uses provided fetch function", () => {
     const myFetch = makeFetch({});
-    const m = new ModuleTSX({ baseUrl: "https://example.com/", importMap: {}, fetch: myFetch });
+    const m = new ModuleTSX({ baseUrl: BASE, fetch: myFetch });
     assert.equal(m.fetch, myFetch);
   });
 
   it("uses string resolveBareSpecifier as prefix", () => {
     const m = new ModuleTSX({
-      baseUrl: "https://example.com/",
-      importMap: {},
+      baseUrl: BASE,
       fetch: makeFetch({}),
       resolveBareSpecifier: "https://cdn.jsdelivr.net/npm/",
     });
@@ -72,8 +79,7 @@ describe("ModuleTSX constructor", () => {
 
   it("uses function resolveBareSpecifier", () => {
     const m = new ModuleTSX({
-      baseUrl: "https://example.com/",
-      importMap: {},
+      baseUrl: BASE,
       fetch: makeFetch({}),
       resolveBareSpecifier: (s) => `https://custom.cdn/${s}`,
     });
@@ -84,8 +90,7 @@ describe("ModuleTSX constructor", () => {
 describe("ModuleTSX events", () => {
   it("emits 'import' event when import() is called", async () => {
     const m = new ModuleTSX({
-      baseUrl: "https://example.com/",
-      importMap: {},
+      baseUrl: BASE,
       fetch: async () => { throw new Error("network error"); },
     });
 
@@ -99,8 +104,7 @@ describe("ModuleTSX events", () => {
 
   it("emits 'import:error' event when fetch fails", async () => {
     const m = new ModuleTSX({
-      baseUrl: "https://example.com/",
-      importMap: {},
+      baseUrl: BASE,
       fetch: async () => { throw new Error("network error"); },
     });
 
@@ -117,8 +121,7 @@ describe("ModuleTSX events", () => {
 
     const events: string[] = [];
     const m = new ModuleTSX({
-      baseUrl: "https://example.com/",
-      importMap: {},
+      baseUrl: BASE,
       fetch: makeFetch({}),
     });
     m.addEventListener("transform", (e) => events.push((e as CustomEvent).detail.sourceUrl));
@@ -132,8 +135,7 @@ describe("ModuleTSX specifier resolution via fetch tracking", () => {
   it("resolves bare specifier to esm.sh by default", async () => {
     const fetched: string[] = [];
     const m = new ModuleTSX({
-      baseUrl: "https://example.com/",
-      importMap: {},
+      baseUrl: BASE,
       fetch: async (url) => {
         fetched.push(url);
         throw new Error("stop");
@@ -147,8 +149,8 @@ describe("ModuleTSX specifier resolution via fetch tracking", () => {
   it("resolves bare specifier via importMap before esm.sh", async () => {
     const fetched: string[] = [];
     const m = new ModuleTSX({
-      baseUrl: "https://example.com/",
-      importMap: { imports: { react: "https://cdn.example.com/react.js" } },
+      baseUrl: BASE,
+      importMap: parseMap({ imports: { react: "https://cdn.example.com/react.js" } }),
       fetch: async (url) => {
         fetched.push(url);
         throw new Error("stop");
@@ -164,7 +166,6 @@ describe("ModuleTSX specifier resolution via fetch tracking", () => {
     const fetched: string[] = [];
     const m = new ModuleTSX({
       baseUrl: "https://example.com/app/",
-      importMap: {},
       fetch: async (url) => {
         fetched.push(url);
         throw new Error("stop");
@@ -178,8 +179,7 @@ describe("ModuleTSX specifier resolution via fetch tracking", () => {
   it("uses custom resolveBareSpecifier string prefix", async () => {
     const fetched: string[] = [];
     const m = new ModuleTSX({
-      baseUrl: "https://example.com/",
-      importMap: {},
+      baseUrl: BASE,
       fetch: async (url) => {
         fetched.push(url);
         throw new Error("stop");
@@ -194,8 +194,7 @@ describe("ModuleTSX specifier resolution via fetch tracking", () => {
   it("uses custom resolveBareSpecifier function", async () => {
     const fetched: string[] = [];
     const m = new ModuleTSX({
-      baseUrl: "https://example.com/",
-      importMap: {},
+      baseUrl: BASE,
       fetch: async (url) => {
         fetched.push(url);
         throw new Error("stop");
@@ -213,8 +212,7 @@ describe("ModuleTSX importCode end-to-end", () => {
     const pending = patchBlobToDataUrl();
 
     const m = new ModuleTSX({
-      baseUrl: "https://example.com/",
-      importMap: {},
+      baseUrl: BASE,
       fetch: makeFetch({}),
     });
 
@@ -231,8 +229,8 @@ describe("ModuleTSX importCode end-to-end", () => {
     const pending = patchBlobToDataUrl();
 
     const m = new ModuleTSX({
-      baseUrl: "https://example.com/",
-      importMap: { imports: { react: "https://cdn.example.com/react.js" } },
+      baseUrl: BASE,
+      importMap: parseMap({ imports: { react: "https://cdn.example.com/react.js" } }),
       fetch: makeFetch({}),
     });
 
@@ -248,8 +246,7 @@ describe("ModuleTSX importCode end-to-end", () => {
     const pending = patchBlobToDataUrl();
 
     const m = new ModuleTSX({
-      baseUrl: "https://example.com/",
-      importMap: {},
+      baseUrl: BASE,
       fetch: makeFetch({}),
     });
 
@@ -270,8 +267,7 @@ describe("ModuleTSX importCode end-to-end", () => {
     };
 
     const m = new ModuleTSX({
-      baseUrl: "https://example.com/",
-      importMap: {},
+      baseUrl: BASE,
       fetch: async (url) => {
         fetched.push(url);
         return makeFetch(files)(url);
@@ -293,8 +289,7 @@ describe("ModuleTSX importCode end-to-end", () => {
     let transformCount = 0;
 
     const m = new ModuleTSX({
-      baseUrl: "https://example.com/",
-      importMap: {},
+      baseUrl: BASE,
       fetch: makeFetch({}),
     });
 
