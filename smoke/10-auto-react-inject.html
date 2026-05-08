@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>10 — Auto React import injection</title>
+    <link rel="stylesheet" href="https://raw.esm.sh/qunit/qunit/qunit.css" />
+  </head>
+  <body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <script src="https://raw.esm.sh/qunit/qunit/qunit.js"></script>
+    <script type="module">
+      import { ModuleTSX, ImportMap } from "../dist/index.mjs";
+
+      const { test } = QUnit;
+
+      // Provide react mapping so the auto-injected import resolves
+      const importMap = ImportMap.of({
+        imports: { react: "https://esm.sh/react" },
+      }, location.href);
+
+      QUnit.module("Auto React import injection", () => {
+        test("JSX without explicit React import compiles and renders", async (assert) => {
+          const m = new ModuleTSX({ baseUrl: location.href, importMap });
+
+          // No "import React from 'react'" — should be auto-injected
+          const { el } = await m.importCode(location.href + "no-react-import", `
+            export const el = <div className="auto-react">auto</div>;
+          `);
+
+          assert.ok(el, "JSX compiled without explicit React import");
+          assert.strictEqual(el.type, "div", "element type correct");
+          assert.strictEqual(el.props.className, "auto-react", "props correct");
+          assert.strictEqual(el.props.children, "auto", "children correct");
+        });
+
+        test("explicit React import is not duplicated", async (assert) => {
+          const m = new ModuleTSX({ baseUrl: location.href, importMap });
+
+          const { el } = await m.importCode(location.href + "with-react-import", `
+            import React from "react";
+            export const el = <span>explicit</span>;
+          `);
+
+          assert.ok(el, "JSX compiled with explicit React import");
+          assert.strictEqual(el.type, "span");
+          assert.strictEqual(el.props.children, "explicit");
+        });
+
+        test("plain TS file does not get React injected", async (assert) => {
+          // Intercept fetch: if react is ever fetched, the test should fail
+          let reactFetched = false;
+          const m = new ModuleTSX({
+            baseUrl: location.href,
+            fetch: async (url) => {
+              if (url.includes("react")) reactFetched = true;
+              throw new Error("stop");
+            },
+          });
+          m.addEventListener("import:error", () => {});
+
+          // Plain TypeScript with no JSX — React should never be imported
+          const { x } = await m.importCode(location.href + "plain", `
+            const x: number = 42;
+            export { x };
+          `);
+
+          assert.strictEqual(x, 42, "plain TS module works");
+          assert.false(reactFetched, "React was not fetched for plain TS");
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -170,6 +170,12 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
       let workingSourceFile = sourceFile;
       if (needsReactImport(workingSourceFile)) {
         workingSourceFile = addReactImport(workingSourceFile);
+        // "react" was injected after resolveSpecifiers ran — resolve it now so
+        // the transformer rewrites it to a full URL like every other specifier
+        if (!rewrittenSpecifiers.has("react")) {
+          const reactUrl = await this.resolveSpecifier("react", sourceUrl);
+          if (reactUrl !== "react") rewrittenSpecifiers.set("react", reactUrl);
+        }
       }
 
       const transformers: ts.TransformerFactory<ts.SourceFile>[] = [

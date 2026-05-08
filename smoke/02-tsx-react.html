@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>02 — TSX + React rendering</title>
+    <link rel="stylesheet" href="https://raw.esm.sh/qunit/qunit/qunit.css" />
+  </head>
+  <body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <script src="https://raw.esm.sh/qunit/qunit/qunit.js"></script>
+    <script type="module">
+      import { ModuleTSX } from "../dist/index.mjs";
+
+      const { test } = QUnit;
+
+      QUnit.module("TSX + React rendering", () => {
+        test("renders a TSX component to DOM", async (assert) => {
+          const done = assert.async();
+          const container = document.createElement("div");
+          document.getElementById("qunit-fixture").appendChild(container);
+
+          const m = new ModuleTSX({ baseUrl: location.href });
+          await m.importCode(location.href + "app", `
+            import React from "react";
+            import { createRoot } from "react-dom/client";
+
+            function App() {
+              return <div id="smoke-app"><span className="msg">Hello TSX</span></div>;
+            }
+
+            const root = createRoot(document.querySelector("#qunit-fixture div"));
+            root.render(<App />);
+          `);
+
+          // allow React to flush
+          await new Promise(r => setTimeout(r, 100));
+
+          assert.ok(document.getElementById("smoke-app"), "component mounted");
+          assert.strictEqual(
+            document.querySelector(".msg")?.textContent,
+            "Hello TSX",
+            "JSX renders correct text",
+          );
+          done();
+        });
+
+        test("TSX compiles to React.createElement calls", async (assert) => {
+          const m = new ModuleTSX({ baseUrl: location.href });
+          const { el } = await m.importCode(location.href + "elem", `
+            import React from "react";
+            export const el = <p className="test">hi</p>;
+          `);
+          assert.strictEqual(el.type, "p");
+          assert.strictEqual(el.props.className, "test");
+          assert.strictEqual(el.props.children, "hi");
+        });
+      });
+    </script>
+  </body>
+</html>

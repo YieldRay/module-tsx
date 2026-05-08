@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>03 — Import map specifier rewriting</title>
+    <link rel="stylesheet" href="https://raw.esm.sh/qunit/qunit/qunit.css" />
+  </head>
+  <body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <script src="https://raw.esm.sh/qunit/qunit/qunit.js"></script>
+    <script type="module">
+      import { ModuleTSX, ImportMap } from "../dist/index.mjs";
+
+      const { test } = QUnit;
+
+      QUnit.module("Import map specifier rewriting", () => {
+        test("bare specifier resolved via import map", async (assert) => {
+          const importMap = ImportMap.of({
+            imports: { "my-lib": "https://esm.sh/lodash-es" },
+          }, location.href);
+
+          const m = new ModuleTSX({ baseUrl: location.href, importMap });
+          const { chunk } = await m.importCode(location.href + "lib", `
+            import { chunk } from "my-lib";
+            export { chunk };
+          `);
+          assert.ok(typeof chunk === "function", "bare specifier resolved through import map");
+          assert.deepEqual(chunk([1, 2, 3, 4], 2), [[1, 2], [3, 4]], "resolved module works correctly");
+        });
+
+        test("trailing-slash prefix mapping", async (assert) => {
+          // lodash-es/chunk.js exports a default, not a named export
+          const importMap = ImportMap.of({
+            imports: { "lodash-es/": "https://esm.sh/lodash-es/" },
+          }, location.href);
+
+          const m = new ModuleTSX({ baseUrl: location.href, importMap });
+          const mod = await m.importCode(location.href + "prefix", `
+            import chunk from "lodash-es/chunk.js";
+            export { chunk };
+          `);
+          assert.ok(typeof mod.chunk === "function", "trailing-slash prefix mapping works");
+        });
+
+        test("ImportMap.resolve() returns mapped URL for bare specifier", (assert) => {
+          const map = ImportMap.of({
+            imports: { react: "https://esm.sh/react@19" },
+          }, "https://example.com/");
+          const result = ImportMap.resolve("react", map, "https://example.com/");
+          assert.strictEqual(result?.url, "https://esm.sh/react@19", "bare specifier resolved");
+        });
+
+        test("ImportMap.resolve() returns undefined for unmapped specifier", (assert) => {
+          const map = ImportMap.of({
+            imports: { react: "https://esm.sh/react@19" },
+          }, "https://example.com/");
+          const result = ImportMap.resolve("vue", map, "https://example.com/");
+          assert.strictEqual(result, undefined, "unmapped specifier returns undefined");
+        });
+
+        test("unmatched bare specifier falls back to CDN", async (assert) => {
+          const m = new ModuleTSX({ baseUrl: location.href });
+          const { isArray } = await m.importCode(location.href + "cdn", `
+            import { isArray } from "lodash-es";
+            export { isArray };
+          `);
+          assert.ok(typeof isArray === "function", "falls back to esm.sh for unmatched specifiers");
+        });
+      });
+    </script>
+  </body>
+</html>

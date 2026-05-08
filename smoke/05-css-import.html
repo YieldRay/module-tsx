@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>05 — CSS import injection</title>
+    <link rel="stylesheet" href="https://raw.esm.sh/qunit/qunit/qunit.css" />
+  </head>
+  <body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <script src="https://raw.esm.sh/qunit/qunit/qunit.js"></script>
+    <script type="module">
+      import { ModuleTSX } from "../dist/index.mjs";
+
+      const { test } = QUnit;
+
+      QUnit.module("CSS import injection", () => {
+        test("import './style.css' injects a <style> tag into <head>", async (assert) => {
+          const stylesBefore = document.head.querySelectorAll("style").length;
+
+          const m = new ModuleTSX({
+            baseUrl: "https://example.com/",
+            fetch: async (url) => {
+              if (url.endsWith("style.css"))
+                return new Response(".smoke-css-test { color: rgb(255, 0, 0); }", { status: 200 });
+              if (url.endsWith("main.ts"))
+                return new Response(`import "./style.css"; export const ok = true;`, { status: 200 });
+              throw new Error(`404: ${url}`);
+            },
+          });
+
+          const { ok } = await m.import("https://example.com/main.ts");
+          assert.true(ok, "module with CSS import loaded");
+
+          const stylesAfter = document.head.querySelectorAll("style").length;
+          assert.ok(stylesAfter > stylesBefore, "a <style> tag was injected");
+
+          // verify the injected style contains our CSS
+          const injected = [...document.head.querySelectorAll("style")]
+            .some(s => s.textContent.includes(".smoke-css-test"));
+          assert.ok(injected, "injected <style> contains the CSS content");
+        });
+      });
+    </script>
+  </body>
+</html>

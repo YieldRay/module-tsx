@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>04 — Relative imports</title>
+    <link rel="stylesheet" href="https://raw.esm.sh/qunit/qunit/qunit.css" />
+  </head>
+  <body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <script src="https://raw.esm.sh/qunit/qunit/qunit.js"></script>
+    <script type="module">
+      import { ModuleTSX } from "../dist/index.mjs";
+
+      const { test } = QUnit;
+
+      QUnit.module("Relative imports", () => {
+        test("fetches and transpiles a relative .ts import", async (assert) => {
+          const files = {
+            "https://example.com/main.ts": `
+              import { add } from "./util.ts";
+              export const result = add(2, 3);
+            `,
+            "https://example.com/util.ts": `
+              export function add(a: number, b: number): number { return a + b; }
+            `,
+          };
+
+          const m = new ModuleTSX({
+            baseUrl: "https://example.com/",
+            fetch: async (url) => {
+              if (files[url]) return new Response(files[url], { status: 200 });
+              throw new Error(`404: ${url}`);
+            },
+          });
+
+          const { result } = await m.import("https://example.com/main.ts");
+          assert.strictEqual(result, 5, "relative .ts import resolved and transpiled");
+        });
+
+        test("fetches and transpiles a relative .tsx import", async (assert) => {
+          const files = {
+            "https://example.com/app.ts": `
+              import { El } from "./el.tsx";
+              export { El };
+            `,
+            "https://example.com/el.tsx": `
+              import React from "react";
+              export function El() { return <span id="el-test">ok</span>; }
+            `,
+          };
+
+          const m = new ModuleTSX({
+            baseUrl: "https://example.com/",
+            fetch: async (url) => {
+              if (files[url]) return new Response(files[url], { status: 200 });
+              throw new Error(`404: ${url}`);
+            },
+          });
+
+          const { El } = await m.import("https://example.com/app.ts");
+          assert.ok(typeof El === "function", "relative .tsx import resolved");
+        });
+
+        test("deduplicates transform of the same URL imported concurrently", async (assert) => {
+          // transformSourceModule deduplicates: same sourceUrl → same blob, transform fires once
+          let transformCount = 0;
+          const m = new ModuleTSX({ baseUrl: "https://example.com/" });
+          m.addEventListener("transform", () => { transformCount++; });
+
+          const code = `export const x = 1;`;
+          const url = "https://example.com/shared.ts";
+
+          await Promise.all([
+            m.importCode(url, code),
+            m.importCode(url, code),
+          ]);
+
+          assert.strictEqual(transformCount, 1, "transform runs only once for concurrent importCode calls");
+        });
+      });
+    </script>
+  </body>
+</html>

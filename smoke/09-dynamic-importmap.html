@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>09 — Dynamic import map via addImportMap()</title>
+    <link rel="stylesheet" href="https://raw.esm.sh/qunit/qunit/qunit.css" />
+  </head>
+  <body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <script src="https://raw.esm.sh/qunit/qunit/qunit.js"></script>
+    <script type="module">
+      import { ModuleTSX, ImportMap } from "../dist/index.mjs";
+
+      const { test } = QUnit;
+
+      QUnit.module("Dynamic import map via addImportMap()", () => {
+        test("addImportMap() merges new rules and they take effect", async (assert) => {
+          const m = new ModuleTSX({ baseUrl: "https://example.com/" });
+
+          m.addImportMap(ImportMap.of({
+            imports: { "my-pkg": "https://esm.sh/lodash-es" },
+          }, "https://example.com/"));
+
+          const { chunk } = await m.importCode("https://example.com/a.ts", `
+            import { chunk } from "my-pkg";
+            export { chunk };
+          `);
+          assert.ok(typeof chunk === "function", "dynamically added import map rule used");
+          assert.deepEqual(chunk([1, 2, 3, 4], 2), [[1, 2], [3, 4]], "mapped module works correctly");
+        });
+
+        test("addImportMap() respects first-wins: existing keys are not overwritten", (assert) => {
+          const m = new ModuleTSX({
+            baseUrl: "https://example.com/",
+            importMap: ImportMap.of({
+              imports: { react: "https://esm.sh/react@18" },
+            }, "https://example.com/"),
+          });
+
+          // Try to override react — should be ignored (first-wins)
+          m.addImportMap(ImportMap.of({
+            imports: { react: "https://esm.sh/react@17" },
+          }, "https://example.com/"));
+
+          const result = ImportMap.resolve("react", m.importMap, "https://example.com/");
+          assert.strictEqual(result?.url, "https://esm.sh/react@18", "first-registered mapping wins");
+        });
+
+        test("addImportMap() adds non-conflicting rules alongside existing ones", (assert) => {
+          const m = new ModuleTSX({
+            baseUrl: "https://example.com/",
+            importMap: ImportMap.of({
+              imports: { react: "https://esm.sh/react@18" },
+            }, "https://example.com/"),
+          });
+
+          m.addImportMap(ImportMap.of({
+            imports: { vue: "https://esm.sh/vue" },
+          }, "https://example.com/"));
+
+          const react = ImportMap.resolve("react", m.importMap, "https://example.com/");
+          const vue = ImportMap.resolve("vue", m.importMap, "https://example.com/");
+          assert.strictEqual(react?.url, "https://esm.sh/react@18", "existing rule preserved");
+          assert.strictEqual(vue?.url, "https://esm.sh/vue", "new rule added");
+        });
+      });
+    </script>
+  </body>
+</html>

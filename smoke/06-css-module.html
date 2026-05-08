@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>06 — CSS Module import</title>
+    <link rel="stylesheet" href="https://raw.esm.sh/qunit/qunit/qunit.css" />
+  </head>
+  <body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <script src="https://raw.esm.sh/qunit/qunit/qunit.js"></script>
+    <script type="module">
+      import { ModuleTSX } from "../dist/index.mjs";
+
+      const { test } = QUnit;
+
+      QUnit.module("CSS Module import", () => {
+        test("import './style.module.css' returns a scoped class name object", async (assert) => {
+          const m = new ModuleTSX({
+            baseUrl: "https://example.com/",
+            fetch: async (url) => {
+              if (url.endsWith("button.module.css"))
+                return new Response(".root { color: red; } .label { font-size: 14px; }", { status: 200 });
+              if (url.endsWith("main.ts"))
+                return new Response(`
+                  import styles from "./button.module.css";
+                  export { styles };
+                `, { status: 200 });
+              throw new Error(`404: ${url}`);
+            },
+          });
+
+          const { styles } = await m.import("https://example.com/main.ts");
+          assert.ok(typeof styles === "object" && styles !== null, "styles is an object");
+          assert.ok(typeof styles.root === "string", "styles.root is a string class name");
+          assert.ok(typeof styles.label === "string", "styles.label is a string class name");
+          assert.notEqual(styles.root, "root", "class name is scoped (not the original)");
+        });
+      });
+    </script>
+  </body>
+</html>
