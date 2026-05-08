@@ -71,6 +71,16 @@ m.addEventListener("transform", (e) => console.log("compiling", e.detail.sourceU
 m.addEventListener("transform:error", (e) => console.error("compile error", e.detail.sourceUrl, e.detail.error));
 ```
 
+## Use with AI
+
+module-tsx is well-suited for AI-generated pages — an AI can produce a single, self-contained HTML file that runs TypeScript and React directly in the browser with no build step or configuration.
+
+To use the skill, run
+
+```sh
+npx skills add yieldray/module-tsx
+```
+
 ## CDN
 
 ```html

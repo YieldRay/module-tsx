@@ -189,68 +189,70 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
     }
   }
 
+  private async resolveLocalUrl(fullUrl: string): Promise<string> {
+    const { pathname } = new URL(fullUrl);
+    if (pathname.endsWith(".module.css")) {
+      return this.transformSourceModule("css-module", fullUrl, await this.fetchText(fullUrl));
+    }
+    if (pathname.endsWith(".css")) {
+      return this.transformSourceModule("css", fullUrl, await this.fetchText(fullUrl));
+    }
+    if (pathname.endsWith(".wasm")) {
+      // wasm will be handled natively by the browser
+      // so we just return the original full URL
+      return fullUrl;
+    }
+    // If this URL is already being transformed (circular import), return the raw URL.
+    // The browser handles circular ESM natively; we just need to avoid deadlocking.
+    if (this.sourceTracker.isInFlight("esm", fullUrl)) {
+      return fullUrl;
+    }
+    //! ^ transformSourceModule is recursive ^
+    return this.transformSourceModule("esm", fullUrl, await this.fetchText(fullUrl));
+  }
+
   private async resolveSpecifier(specifier: string, sourceUrl: string): Promise<string> {
     const resolved = ImportMap.resolve(specifier, this.importMap, sourceUrl);
     if (resolved) {
       this.resolvedModuleSet.push(resolved.record);
+      // CSS resolved via import map still needs to be injected as a <style> tag
+      const { pathname } = new URL(resolved.url);
+      if (pathname.endsWith(".module.css")) {
+        return this.transformSourceModule("css-module", resolved.url, await this.fetchText(resolved.url));
+      }
+      if (pathname.endsWith(".css")) {
+        return this.transformSourceModule("css", resolved.url, await this.fetchText(resolved.url));
+      }
       return resolved.url;
     }
-    const getCssUrl = async (fullURL: string) => {
-      // const code = this.cssStrategy === "link" ? "" : await this.fetchCode(url);
-      return await this.transformSourceModule("css", fullURL, await this.fetchText(fullURL));
-    };
-    const toCDNUrl = (specifier: string) => {
-      // this avoid we accidentally convert a package named xxx.css to a css file on esm.sh
-      const subpath = specifier.startsWith("@")
-        ? // @scope/pkg/subpath -> /subpath
-          specifier.split("/").slice(2).join("/")
-        : // pkg/subpath -> /subpath
-          specifier.split("/").slice(1).join("/");
-
-      const url = this.resolveBareSpecifier(specifier);
-      if (subpath.endsWith(".css")) {
-        // if the subpath (not the package name) ends with .css, we treat it as a css file
-        return getCssUrl(url);
-      }
-      return url;
-    };
 
     if (isRelativeSpecifier(specifier)) {
-      const targetUrl = new URL(specifier, sourceUrl);
       // local file, we fetch and transform it, then return the blob URL
-      if (targetUrl.pathname.endsWith(".module.css")) {
-        const blobUrl = await this.transformSourceModule(
-          "css-module",
-          targetUrl.href,
-          await this.fetchText(targetUrl.href),
-        );
-        return blobUrl;
-      } else if (targetUrl.pathname.endsWith(".css")) {
-        return getCssUrl(targetUrl.href);
-      } else if (targetUrl.pathname.endsWith(".wasm")) {
-        // wasm will be handled natively by the browser
-        // so we just return the original full URL
-        return targetUrl.href;
-      } else {
-        // If this URL is already being transformed (circular import), return the raw URL.
-        // The browser handles circular ESM natively; we just need to avoid deadlocking.
-        if (this.sourceTracker.isInFlight("esm", targetUrl.href)) {
-          return targetUrl.href;
-        }
-        const blobUrl = await this.transformSourceModule("esm", targetUrl.href, await this.fetchText(targetUrl.href));
-        //! ^ transformSourceModule is recursive ^
-        return blobUrl;
-      }
-    } else if (specifier.startsWith("node:")) {
-      return `https://raw.esm.sh/@jspm/core/nodelibs/browser/${specifier.slice(5)}.js`;
-    } else if (specifier.startsWith("npm:")) {
-      return toCDNUrl(specifier.slice(4));
-    } else if (isBareSpecifier(specifier)) {
-      return toCDNUrl(specifier);
-    } else {
-      // Fallback: return the original specifier
-      return specifier;
+      return this.resolveLocalUrl(new URL(specifier, sourceUrl).href);
     }
+
+    if (specifier.startsWith("node:")) {
+      return `https://raw.esm.sh/@jspm/core/nodelibs/browser/${specifier.slice(5)}.js`;
+    }
+
+    const bareSpecifier = specifier.startsWith("npm:") ? specifier.slice(4) : specifier;
+    if (specifier.startsWith("npm:") || isBareSpecifier(specifier)) {
+      // this avoid we accidentally convert a package named xxx.css to a css file on esm.sh
+      const subpath = bareSpecifier.startsWith("@")
+        ? // @scope/pkg/subpath -> subpath
+          bareSpecifier.split("/").slice(2).join("/")
+        : // pkg/subpath -> subpath
+          bareSpecifier.split("/").slice(1).join("/");
+      const url = this.resolveBareSpecifier(bareSpecifier);
+      if (subpath.endsWith(".css")) {
+        // if the subpath (not the package name) ends with .css, we treat it as a css file
+        return this.transformSourceModule("css", url, await this.fetchText(url));
+      }
+      return url;
+    }
+
+    // Fallback: return the original specifier
+    return specifier;
   }
 
   private async resolveSpecifiers(specifiers: Set<string>, sourceUrl: string): Promise<Map<string, string>> {

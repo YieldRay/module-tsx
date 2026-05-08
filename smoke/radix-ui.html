@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>@radix-ui/themes</title>
+    <script type="module" src="../dist/index.mjs"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@18",
+          "react-dom/": "https://esm.sh/react-dom@18/",
+          "@radix-ui/themes": "https://esm.sh/@radix-ui/themes?deps=react@18,react-dom@18",
+          "@radix-ui/themes/": "https://esm.sh/@radix-ui/themes/"
+        }
+      }
+    </script>
+    <script type="module-tsx">
+      import React from "react";
+      import { createRoot } from "react-dom/client";
+      import { Theme, Button } from "@radix-ui/themes";
+      import "@radix-ui/themes/styles.css";
+      import '@tailwindcss/browser'
+
+      createRoot(document.getElementById("root")!).render(
+        <Theme>
+          <h1 class="text-3xl font-bold mb-4">Hello, Radix UI!</h1>
+          <Button>Click me</Button>
+        </Theme>
+      );
+    </script>
+  </body>
+</html>
