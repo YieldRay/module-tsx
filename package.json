@@ -6,6 +6,7 @@
     "dist"
   ],
   "main": "dist/index.mjs",
+  "browser": "dist/index.cdn.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsdown",

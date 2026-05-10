@@ -1,5 +1,9 @@
 import { defineConfig, type UserConfig } from "tsdown";
 import * as esbuild from "esbuild";
+import fs from "node:fs";
+
+const pkg = JSON.parse(fs.readFileSync("./package.json", "utf-8"));
+const dependencies = pkg.dependencies || {};
 
 const esbuildTypescript = await esbuild.build({
   entryPoints: ["node_modules/typescript/lib/typescript.js"],
@@ -30,7 +34,45 @@ const bundleTypescriptPlugin: UserConfig["plugins"] = {
   },
 };
 
+const esmShPlugin: UserConfig["plugins"] = {
+  name: "rewrite-to-esm-sh",
+  resolveId: {
+    order: "pre",
+    handler(id: string) {
+      if (!id.startsWith(".") && !id.startsWith("/") && !id.startsWith("virtual:") && !id.startsWith("\0")) {
+        const parts = id.split("/");
+        const packageName = id.startsWith("@") ? `${parts[0]}/${parts[1]}` : parts[0];
+        const subpath = id.slice(packageName.length);
+
+        if (dependencies[packageName]) {
+          let version = dependencies[packageName];
+          try {
+            const pkgJson = JSON.parse(fs.readFileSync(`./node_modules/${packageName}/package.json`, "utf-8"));
+            if (pkgJson.version) version = pkgJson.version;
+          } catch {
+            version = version.replace(/^[\^~]/, "");
+          }
+          return { id: `https://esm.sh/${packageName}@${version}${subpath}`, external: true };
+        }
+        return { id: `https://esm.sh/${id}`, external: true };
+      }
+    },
+  },
+};
+
 export default defineConfig([
+  // index.cdn.js — ESM, unbundled, external deps rewritten to esm.sh
+  {
+    dts: false,
+    entry: { index: "./src/index.ts" },
+    format: "esm",
+    platform: "browser",
+    target: ["esnext"],
+    plugins: esmShPlugin,
+    outputOptions: {
+      entryFileNames: "[name].cdn.mjs",
+    },
+  },
   // index.js — ESM, unbundled (external deps)
   {
     dts: true,
