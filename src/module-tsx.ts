@@ -74,7 +74,8 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
     this.resolveBareSpecifier =
       typeof config?.resolveBareSpecifier === "function"
         ? config?.resolveBareSpecifier
-        : (specifier: string) => (config?.resolveBareSpecifier ?? "https://esm.sh/") + specifier;
+        : (specifier: string) =>
+            (config?.resolveBareSpecifier ?? "https://esm.sh/") + specifier;
   }
 
   /** Add a new import map, merging it into the existing one per the spec.
@@ -83,7 +84,10 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
     ImportMap.merge(this.importMap, newImportMap, this.resolvedModuleSet);
   }
 
-  private emit<T extends keyof ModuleTSXEventMap>(type: T, detail?: ModuleTSXEventMap[T]["detail"]) {
+  private emit<T extends keyof ModuleTSXEventMap>(
+    type: T,
+    detail?: ModuleTSXEventMap[T]["detail"],
+  ) {
     this.dispatchEvent(new CustomEvent(type, { detail }));
     this.dispatchEvent(
       new CustomEvent("*", {
@@ -116,9 +120,17 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
     }
   }
 
-  public async importCode(sourceUrl: string, code: string, options?: any): Promise<any> {
+  public async importCode(
+    sourceUrl: string,
+    code: string,
+    options?: any,
+  ): Promise<any> {
     try {
-      const transformedUrl = await this.transformSourceModule("esm", sourceUrl, code);
+      const transformedUrl = await this.transformSourceModule(
+        "esm",
+        sourceUrl,
+        code,
+      );
       return await import(transformedUrl, options);
     } catch (error) {
       this.emit("import:error", { id: sourceUrl, error });
@@ -127,7 +139,11 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
   }
 
   /** Transform module source code and return a blob URL with the transformed content */
-  private async transformSourceModule(sourceType: ResourceType, sourceUrl: string, sourceCode: string) {
+  private async transformSourceModule(
+    sourceType: ResourceType,
+    sourceUrl: string,
+    sourceCode: string,
+  ) {
     const cachedBlobUrl = this.sourceTracker.get(sourceType, sourceUrl);
     if (cachedBlobUrl) {
       return cachedBlobUrl;
@@ -135,7 +151,9 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
 
     return this.sourceTracker.runWithDedup(sourceType, sourceUrl, async () => {
       const loader = this.getLoaderByResourceType(sourceType);
-      const code = `import.meta.url=${JSON.stringify(sourceUrl)};\n` + (await loader(sourceUrl, sourceCode));
+      const code =
+        `import.meta.url=${JSON.stringify(sourceUrl)};\n` +
+        (await loader(sourceUrl, sourceCode));
       const blob = new Blob([code], { type: "text/javascript" });
       const blobUrl = URL.createObjectURL(blob);
       this.sourceTracker.set(sourceType, sourceUrl, blobUrl);
@@ -158,14 +176,20 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
     }
   }
 
-  private async tsxLoader(sourceUrl: string, sourceCode: string): Promise<string> {
+  private async tsxLoader(
+    sourceUrl: string,
+    sourceCode: string,
+  ): Promise<string> {
     this.emit("transform", { sourceUrl });
 
     try {
       const sourceFile = createSourceFile(sourceCode, getFileName(sourceUrl));
       const specifiers = collectSpecifiers(sourceFile);
       // Collect and resolve all specifiers
-      const rewrittenSpecifiers = await this.resolveSpecifiers(specifiers, sourceUrl);
+      const rewrittenSpecifiers = await this.resolveSpecifiers(
+        specifiers,
+        sourceUrl,
+      );
 
       let workingSourceFile = sourceFile;
       if (needsReactImport(workingSourceFile)) {
@@ -192,10 +216,18 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
   private async resolveLocalUrl(fullUrl: string): Promise<string> {
     const { pathname } = new URL(fullUrl);
     if (pathname.endsWith(".module.css")) {
-      return this.transformSourceModule("css-module", fullUrl, await this.fetchText(fullUrl));
+      return this.transformSourceModule(
+        "css-module",
+        fullUrl,
+        await this.fetchText(fullUrl),
+      );
     }
     if (pathname.endsWith(".css")) {
-      return this.transformSourceModule("css", fullUrl, await this.fetchText(fullUrl));
+      return this.transformSourceModule(
+        "css",
+        fullUrl,
+        await this.fetchText(fullUrl),
+      );
     }
     if (pathname.endsWith(".wasm")) {
       // wasm will be handled natively by the browser
@@ -208,20 +240,35 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
       return fullUrl;
     }
     //! ^ transformSourceModule is recursive ^
-    return this.transformSourceModule("esm", fullUrl, await this.fetchText(fullUrl));
+    return this.transformSourceModule(
+      "esm",
+      fullUrl,
+      await this.fetchText(fullUrl),
+    );
   }
 
-  private async resolveSpecifier(specifier: string, sourceUrl: string): Promise<string> {
+  private async resolveSpecifier(
+    specifier: string,
+    sourceUrl: string,
+  ): Promise<string> {
     const resolved = ImportMap.resolve(specifier, this.importMap, sourceUrl);
     if (resolved) {
       this.resolvedModuleSet.push(resolved.record);
       // CSS resolved via import map still needs to be injected as a <style> tag
       const { pathname } = new URL(resolved.url);
       if (pathname.endsWith(".module.css")) {
-        return this.transformSourceModule("css-module", resolved.url, await this.fetchText(resolved.url));
+        return this.transformSourceModule(
+          "css-module",
+          resolved.url,
+          await this.fetchText(resolved.url),
+        );
       }
       if (pathname.endsWith(".css")) {
-        return this.transformSourceModule("css", resolved.url, await this.fetchText(resolved.url));
+        return this.transformSourceModule(
+          "css",
+          resolved.url,
+          await this.fetchText(resolved.url),
+        );
       }
       return resolved.url;
     }
@@ -235,7 +282,9 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
       return `https://raw.esm.sh/@jspm/core/nodelibs/browser/${specifier.slice(5)}.js`;
     }
 
-    const bareSpecifier = specifier.startsWith("npm:") ? specifier.slice(4) : specifier;
+    const bareSpecifier = specifier.startsWith("npm:")
+      ? specifier.slice(4)
+      : specifier;
     if (specifier.startsWith("npm:") || isBareSpecifier(specifier)) {
       // this avoid we accidentally convert a package named xxx.css to a css file on esm.sh
       const subpath = bareSpecifier.startsWith("@")
@@ -246,7 +295,11 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
       const url = this.resolveBareSpecifier(bareSpecifier);
       if (subpath.endsWith(".css")) {
         // if the subpath (not the package name) ends with .css, we treat it as a css file
-        return this.transformSourceModule("css", url, await this.fetchText(url));
+        return this.transformSourceModule(
+          "css",
+          url,
+          await this.fetchText(url),
+        );
       }
       return url;
     }
@@ -255,7 +308,10 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
     return specifier;
   }
 
-  private async resolveSpecifiers(specifiers: Set<string>, sourceUrl: string): Promise<Map<string, string>> {
+  private async resolveSpecifiers(
+    specifiers: Set<string>,
+    sourceUrl: string,
+  ): Promise<Map<string, string>> {
     const resolved = new Map<string, string>();
 
     const tasks = Array.from(specifiers).map(async (specifier) => {

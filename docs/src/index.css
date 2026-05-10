@@ -9,17 +9,29 @@ body {
 }
 
 article {
-  & h1, & h2, & h3, & h4 {
+  & h1,
+  & h2,
+  & h3,
+  & h4 {
     font-weight: 700;
     line-height: 1.25;
     margin-top: 1.5em;
     margin-bottom: 0.5em;
   }
 
-  & h1 { font-size: 2.25rem; margin-top: 0; }
-  & h2 { font-size: 1.5rem; }
-  & h3 { font-size: 1.25rem; }
-  & h4 { font-size: 1rem; }
+  & h1 {
+    font-size: 2.25rem;
+    margin-top: 0;
+  }
+  & h2 {
+    font-size: 1.5rem;
+  }
+  & h3 {
+    font-size: 1.25rem;
+  }
+  & h4 {
+    font-size: 1rem;
+  }
 
   & p {
     margin-top: 0;
@@ -39,7 +51,8 @@ article {
     border-radius: 4px;
   }
 
-  & ul, & ol {
+  & ul,
+  & ol {
     padding-left: 1.5em;
     margin-bottom: 1em;
   }
@@ -55,16 +68,16 @@ article {
   padding: 0 !important;
   margin: 0 !important;
   font-family:
-    "SF Mono",        /* macOS/iOS */
-    ui-monospace,     /* Safari 13.1+ generic */
-    "Cascadia Code",  /* Windows 11 */
-    "Cascadia Mono",  /* Windows Terminal */
-    Consolas,         /* Windows */
-    "Roboto Mono",    /* Android / Chrome OS */
-    "Liberation Mono",/* Linux (Red Hat / Fedora) */
-    "DejaVu Sans Mono",/* Linux (Ubuntu / Debian) */
-    Menlo,            /* macOS (older) */
-    monospace !important;
+    "SF Mono",
+    /* macOS/iOS */ ui-monospace,
+    /* Safari 13.1+ generic */ "Cascadia Code",
+    /* Windows 11 */ "Cascadia Mono",
+    /* Windows Terminal */ Consolas,
+    /* Windows */ "Roboto Mono",
+    /* Android / Chrome OS */ "Liberation Mono",
+    /* Linux (Red Hat / Fedora) */ "DejaVu Sans Mono",
+    /* Linux (Ubuntu / Debian) */ Menlo,
+    /* macOS (older) */ monospace !important;
 
   & > div {
     padding: 1rem !important;

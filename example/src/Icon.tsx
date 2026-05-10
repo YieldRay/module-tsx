@@ -3,7 +3,10 @@ import type { CSSProperties, SVGProps } from "react";
 
 export { default as Stack } from "./Stack.tsx";
 
-export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "path" | "color" | "rotate"> {
+export interface IconProps extends Omit<
+  SVGProps<SVGSVGElement>,
+  "path" | "color" | "rotate"
+> {
   path: string;
   size?: number | string | null;
   color?: string | null;
@@ -61,7 +64,13 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
     }
 
     // Cast `rest` to SVGProps<SVGPathElement> to satisfy strict event handler target checks
-    let transformElement = <path d={path} style={pathStyle} {...(inStack ? (rest as SVGProps<SVGPathElement>) : {})} />;
+    let transformElement = (
+      <path
+        d={path}
+        style={pathStyle}
+        {...(inStack ? (rest as SVGProps<SVGPathElement>) : {})}
+      />
+    );
 
     if (transforms.length > 0) {
       computedStyle.transform = transforms.join(" ");
@@ -93,7 +102,9 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
           }}
         >
           {transformElement}
-          {!(horizontal || vertical || rotate !== 0) && <rect width="24" height="24" fill="transparent" />}
+          {!(horizontal || vertical || rotate !== 0) && (
+            <rect width="24" height="24" fill="transparent" />
+          )}
         </g>
       );
     }
@@ -108,7 +119,9 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
     let role;
 
     if (title) {
-      ariaLabelledby = description ? `${labelledById} ${describedById}` : labelledById;
+      ariaLabelledby = description
+        ? `${labelledById} ${describedById}`
+        : labelledById;
     } else {
       role = "presentation";
       if (description) {
@@ -117,7 +130,14 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
     }
 
     return (
-      <svg ref={ref} viewBox="0 0 24 24" style={computedStyle} role={role} aria-labelledby={ariaLabelledby} {...rest}>
+      <svg
+        ref={ref}
+        viewBox="0 0 24 24"
+        style={computedStyle}
+        role={role}
+        aria-labelledby={ariaLabelledby}
+        {...rest}
+      >
         {title && <title id={labelledById}>{title}</title>}
         {description && <desc id={describedById}>{description}</desc>}
 

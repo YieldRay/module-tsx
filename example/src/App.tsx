@@ -51,7 +51,10 @@ import { PopoverHolder, Scrim, Select, TooltipHolder } from "soda-material";
 import { useFullscreen } from "soda-material/dist/hooks/use-fullscreen";
 import { useWindowSizeType } from "soda-material/dist/hooks/use-media-query";
 
-function Flex({ children, ...style }: React.CSSProperties & { children?: React.ReactNode }) {
+function Flex({
+  children,
+  ...style
+}: React.CSSProperties & { children?: React.ReactNode }) {
   return (
     <div
       style={{
@@ -66,7 +69,13 @@ function Flex({ children, ...style }: React.CSSProperties & { children?: React.R
   );
 }
 
-function LayoutNavigationDrawer({ children, className }: { children?: React.ReactNode; className?: string }) {
+function LayoutNavigationDrawer({
+  children,
+  className,
+}: {
+  children?: React.ReactNode;
+  className?: string;
+}) {
   const [open, setOpen] = useState(false);
   const isScreenExpanded = useWindowSizeType() === "expanded";
   const bottomSheetRef = useRef<BottomSheetHandle>(null);
@@ -97,24 +106,41 @@ function LayoutNavigationDrawer({ children, className }: { children?: React.Reac
       }}
       className={className}
     >
-      <NavigationDrawer open={open} headline="Mail" modal={!isScreenExpanded} onScrimClick={() => setOpen(false)}>
+      <NavigationDrawer
+        open={open}
+        headline="Mail"
+        modal={!isScreenExpanded}
+        onScrimClick={() => setOpen(false)}
+      >
         <NavigationDrawerItem icon={<Icon path={mdiInbox} />} badge="24">
           Inbox
         </NavigationDrawerItem>
-        <NavigationDrawerItem icon={<Icon path={mdiSendVariantOutline} />} badge="99+">
+        <NavigationDrawerItem
+          icon={<Icon path={mdiSendVariantOutline} />}
+          badge="99+"
+        >
           Outbox
         </NavigationDrawerItem>
-        <NavigationDrawerItem icon={<Icon path={mdiHeartOutline} />}>Favorites</NavigationDrawerItem>
-        <NavigationDrawerItem icon={<Icon path={mdiDeleteOutline} />}>Trash</NavigationDrawerItem>
+        <NavigationDrawerItem icon={<Icon path={mdiHeartOutline} />}>
+          Favorites
+        </NavigationDrawerItem>
+        <NavigationDrawerItem icon={<Icon path={mdiDeleteOutline} />}>
+          Trash
+        </NavigationDrawerItem>
         <Divider />
       </NavigationDrawer>
 
-      <div className="sd-scrollbar" style={{ width: "100%", overflowY: "auto" }}>
+      <div
+        className="sd-scrollbar"
+        style={{ width: "100%", overflowY: "auto" }}
+      >
         <TopAppBar
           fixed
           leadingNavigationIcon={
             <TooltipHolder
-              trigger={<IconButton path={mdiMenu} onClick={() => setOpen(!open)} />}
+              trigger={
+                <IconButton path={mdiMenu} onClick={() => setOpen(!open)} />
+              }
               content={<PlainTooltip>menu</PlainTooltip>}
             />
           }
@@ -137,7 +163,10 @@ function LayoutNavigationDrawer({ children, className }: { children?: React.Reac
                 placement="bottom-end"
                 content={
                   <Menu>
-                    <MenuItem leadingIcon={<Icon path={mdiRefresh} />} onClick={() => setDialogOpen(true)}>
+                    <MenuItem
+                      leadingIcon={<Icon path={mdiRefresh} />}
+                      onClick={() => setDialogOpen(true)}
+                    >
                       Refresh
                     </MenuItem>
                     <MenuItem
@@ -216,7 +245,12 @@ function LayoutNavigationDrawer({ children, className }: { children?: React.Reac
             <CircularProgressIndicator />
           </Flex>
         </BottomSheet>
-        <Scrim center zIndex={999} open={dialogOpen} onScrimClick={() => setDialogOpen(false)}>
+        <Scrim
+          center
+          zIndex={999}
+          open={dialogOpen}
+          onScrimClick={() => setDialogOpen(false)}
+        >
           <Dialog
             headline="Refresh"
             buttons={
@@ -235,12 +269,24 @@ function LayoutNavigationDrawer({ children, className }: { children?: React.Reac
 
 function ListSwitch(props: React.ComponentProps<typeof List>) {
   const [checked, setChecked] = useState(false);
-  return <List {...props} onClick={() => setChecked(!checked)} trailingIcon={<Switch checked={checked} />} />;
+  return (
+    <List
+      {...props}
+      onClick={() => setChecked(!checked)}
+      trailingIcon={<Switch checked={checked} />}
+    />
+  );
 }
 
 function ListCheckbox(props: React.ComponentProps<typeof List>) {
   const [checked, setChecked] = useState(false);
-  return <List {...props} onClick={() => setChecked(!checked)} trailingIcon={<Checkbox checked={checked} />} />;
+  return (
+    <List
+      {...props}
+      onClick={() => setChecked(!checked)}
+      trailingIcon={<Checkbox checked={checked} />}
+    />
+  );
 }
 
 export default function Demo({ className }: { className?: string }) {
@@ -274,7 +320,9 @@ function Section1() {
       </div>
       <Flex clear="both" alignItems="center" justifyContent="space-between">
         <div style={{ margin: "1rem 0.5rem" }}>
-          <RadioButton defaultChecked>By making comments, you must accept our terms of service.</RadioButton>
+          <RadioButton defaultChecked>
+            By making comments, you must accept our terms of service.
+          </RadioButton>
         </div>
         <Button style={{ flexShrink: "0" }} variant="text">
           Cancel
@@ -312,7 +360,11 @@ function Section2() {
                 leadingAvatarLabelText="M"
                 supportingText="@material/material-color-utilities"
               />
-              <ListCheckbox headline="theming" leadingAvatarLabelText="S" supportingText="soda/theme" />
+              <ListCheckbox
+                headline="theming"
+                leadingAvatarLabelText="S"
+                supportingText="soda/theme"
+              />
             </>
           ),
         },
@@ -374,8 +426,19 @@ function WithTabs({
   const [value, setValue] = useState(tabs[0].value);
   return (
     <>
-      <Tabs value={value} onChange={setValue} items={tabs} full variant="secondary" />
-      {tabs.map(({ children, ...item }) => item.value === value && <Fragment key={item.value}>{children}</Fragment>)}
+      <Tabs
+        value={value}
+        onChange={setValue}
+        items={tabs}
+        full
+        variant="secondary"
+      />
+      {tabs.map(
+        ({ children, ...item }) =>
+          item.value === value && (
+            <Fragment key={item.value}>{children}</Fragment>
+          ),
+      )}
     </>
   );
 }

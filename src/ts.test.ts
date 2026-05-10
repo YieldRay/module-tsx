@@ -11,7 +11,7 @@ describe("createSourceFile", () => {
 
   it("parses TSX syntax", () => {
     assert.doesNotThrow(() =>
-      createSourceFile(`const el = <div />;`, "test.tsx")
+      createSourceFile(`const el = <div />;`, "test.tsx"),
     );
   });
 });

@@ -26,18 +26,29 @@ export function collectSpecifiers(sourceFile: ts.SourceFile): Set<string> {
       }
     };
 
-    if (ts.isImportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+    if (
+      ts.isImportDeclaration(node) &&
+      node.moduleSpecifier &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    ) {
       addSpecifier(node.moduleSpecifier);
     }
 
-    if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+    if (
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword
+    ) {
       const arg = node.arguments[0];
       if (arg && ts.isStringLiteral(arg)) {
         addSpecifier(arg);
       }
     }
 
-    if (ts.isExportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+    if (
+      ts.isExportDeclaration(node) &&
+      node.moduleSpecifier &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    ) {
       addSpecifier(node.moduleSpecifier);
     }
 
@@ -57,7 +68,11 @@ export function createRewriteImportTransformer(
 
   const transformer: ts.TransformerFactory<ts.SourceFile> = (context) => {
     const visitNode = (node: ts.Node): ts.Node => {
-      if (ts.isImportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+      if (
+        ts.isImportDeclaration(node) &&
+        node.moduleSpecifier &&
+        ts.isStringLiteral(node.moduleSpecifier)
+      ) {
         const next = rewriteSpecifier(node.moduleSpecifier.text);
         if (next !== node.moduleSpecifier.text) {
           return ts.factory.updateImportDeclaration(
@@ -70,20 +85,32 @@ export function createRewriteImportTransformer(
         }
       }
 
-      if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+      if (
+        ts.isCallExpression(node) &&
+        node.expression.kind === ts.SyntaxKind.ImportKeyword
+      ) {
         const arg = node.arguments[0];
         if (arg && ts.isStringLiteral(arg)) {
           const next = rewriteSpecifier(arg.text);
           if (next !== arg.text) {
-            return ts.factory.updateCallExpression(node, node.expression, node.typeArguments, [
-              ts.factory.createStringLiteral(next),
-              ...node.arguments.slice(1),
-            ]);
+            return ts.factory.updateCallExpression(
+              node,
+              node.expression,
+              node.typeArguments,
+              [
+                ts.factory.createStringLiteral(next),
+                ...node.arguments.slice(1),
+              ],
+            );
           }
         }
       }
 
-      if (ts.isExportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+      if (
+        ts.isExportDeclaration(node) &&
+        node.moduleSpecifier &&
+        ts.isStringLiteral(node.moduleSpecifier)
+      ) {
         const next = rewriteSpecifier(node.moduleSpecifier.text);
         if (next !== node.moduleSpecifier.text) {
           return ts.factory.updateExportDeclaration(

@@ -33,23 +33,58 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Introduction",
     items: [
-      { label: "Getting Started", hash: "#getting-started", icon: mdiRocketLaunch, component: GettingStarted },
-      { label: "Basic Usage", hash: "#basic-usage", icon: mdiFlash, component: BasicUsage },
+      {
+        label: "Getting Started",
+        hash: "#getting-started",
+        icon: mdiRocketLaunch,
+        component: GettingStarted,
+      },
+      {
+        label: "Basic Usage",
+        hash: "#basic-usage",
+        icon: mdiFlash,
+        component: BasicUsage,
+      },
     ],
   },
   {
     title: "Features",
     items: [
-      { label: "TypeScript Support", hash: "#typescript", icon: mdiLanguageTypescript, component: TypeScriptSupport },
-      { label: "Loading Files", hash: "#loading-files", icon: mdiFileCode, component: LoadingFiles },
-      { label: "CSS & CSS Modules", hash: "#css-modules", icon: mdiPalette, component: CssModules },
+      {
+        label: "TypeScript Support",
+        hash: "#typescript",
+        icon: mdiLanguageTypescript,
+        component: TypeScriptSupport,
+      },
+      {
+        label: "Loading Files",
+        hash: "#loading-files",
+        icon: mdiFileCode,
+        component: LoadingFiles,
+      },
+      {
+        label: "CSS & CSS Modules",
+        hash: "#css-modules",
+        icon: mdiPalette,
+        component: CssModules,
+      },
     ],
   },
   {
     title: "Reference",
     items: [
-      { label: "API Reference", hash: "#api-reference", icon: mdiApi, component: ApiReference },
-      { label: "Examples", hash: "#examples", icon: mdiPlayCircleOutline, component: Examples },
+      {
+        label: "API Reference",
+        hash: "#api-reference",
+        icon: mdiApi,
+        component: ApiReference,
+      },
+      {
+        label: "Examples",
+        hash: "#examples",
+        icon: mdiPlayCircleOutline,
+        component: Examples,
+      },
     ],
   },
 ];
@@ -68,11 +103,16 @@ export default function App() {
   }, []);
 
   const allItems = NAV_SECTIONS.flatMap((s) => s.items);
-  const activeItem = allItems.find((i) => i.hash === currentHash) ?? allItems[0];
+  const activeItem =
+    allItems.find((i) => i.hash === currentHash) ?? allItems[0];
   const PageComponent = activeItem.component;
 
   return (
-    <Layout navSections={NAV_SECTIONS} currentHash={currentHash} onNavigate={setCurrentHash}>
+    <Layout
+      navSections={NAV_SECTIONS}
+      currentHash={currentHash}
+      onNavigate={setCurrentHash}
+    >
       <PageComponent />
     </Layout>
   );

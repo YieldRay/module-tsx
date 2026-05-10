@@ -7,7 +7,11 @@ export class SourceTransformTracker<TSourceType extends string> {
     return this.sourceMap.get(this.getSourceKey(sourceType, sourceUrl));
   }
 
-  public set(sourceType: TSourceType, sourceUrl: string, blobUrl: string): void {
+  public set(
+    sourceType: TSourceType,
+    sourceUrl: string,
+    blobUrl: string,
+  ): void {
     this.sourceMap.set(this.getSourceKey(sourceType, sourceUrl), blobUrl);
     this.blobMap.set(blobUrl, sourceUrl);
   }

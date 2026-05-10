@@ -6,7 +6,10 @@ type Awaitable<T> = T | Promise<T>;
  * @param sourceCode - Raw source code
  * @returns Raw ESM code
  */
-export type Loader = (sourceUrl: string, sourceCode: string) => Awaitable<string>;
+export type Loader = (
+  sourceUrl: string,
+  sourceCode: string,
+) => Awaitable<string>;
 
 export const cssLoader: Loader = (sourceUrl, sourceCode) => {
   const code = /*js*/ `\
@@ -31,7 +34,8 @@ document.head.appendChild(link);
 
 export const cssModuleLoader: Loader = (sourceUrl, sourceCode) => {
   const pathname = new URL(sourceUrl).pathname;
-  const filename = pathname.substring(pathname.lastIndexOf("/") + 1) || "index.css";
+  const filename =
+    pathname.substring(pathname.lastIndexOf("/") + 1) || "index.css";
   const withoutExt = filename.slice(0, filename.indexOf("."));
   // Remove non-alphanumeric characters
   const prefix = withoutExt.replace(/[^a-zA-Z0-9]/g, "_");
@@ -56,16 +60,20 @@ function cssToModule(cssString: string, prefix?: string) {
 
   const getHash = (name: string): string => {
     const p = prefix ? `${prefix}_` : "";
-    if (!jsonMap[name]) jsonMap[name] = `${p}${name}_${Math.random().toString(36).slice(2, 7)}`;
+    if (!jsonMap[name])
+      jsonMap[name] = `${p}${name}_${Math.random().toString(36).slice(2, 7)}`;
     return jsonMap[name];
   };
 
   const processRules = (ruleList: CSSRuleList): void => {
     for (const rule of ruleList) {
       if (rule instanceof CSSStyleRule) {
-        const newSelector = rule.selectorText.replace(/\.([a-zA-Z_][\w-]*)/g, (_match, className) => {
-          return `.${getHash(className)}`;
-        });
+        const newSelector = rule.selectorText.replace(
+          /\.([a-zA-Z_][\w-]*)/g,
+          (_match, className) => {
+            return `.${getHash(className)}`;
+          },
+        );
         rule.selectorText = newSelector;
       } else if (rule instanceof CSSGroupingRule) {
         processRules(rule.cssRules);

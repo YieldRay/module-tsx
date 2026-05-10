@@ -1,13 +1,21 @@
 import ts from "typescript";
 import { ModuleTSXError } from "./error.ts";
 
-
-export function createSourceFile(code: string, fileName :string) {
+export function createSourceFile(code: string, fileName: string) {
   try {
-    const sourceFile = ts.createSourceFile(fileName, code, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const sourceFile = ts.createSourceFile(
+      fileName,
+      code,
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TSX,
+    );
     return sourceFile;
   } catch (cause) {
-    throw new ModuleTSXError(`Failed to create typescript source file ${fileName}`, { cause });
+    throw new ModuleTSXError(
+      `Failed to create typescript source file ${fileName}`,
+      { cause },
+    );
   }
 }
 
@@ -35,7 +43,10 @@ export function printSourceFile(sourceFile: ts.SourceFile): string {
     //   `import { jsxDEV as _jsxDEV } from "https://esm.sh/react/jsx-dev-runtime";`
     // );
   } catch (cause) {
-    throw new ModuleTSXError(`Failed to print typescript source file ${sourceFile.fileName}`, { cause });
+    throw new ModuleTSXError(
+      `Failed to print typescript source file ${sourceFile.fileName}`,
+      { cause },
+    );
   }
 }
 
@@ -49,6 +60,9 @@ export function transform(
     result.dispose();
     return transformedFile;
   } catch (cause) {
-    throw new ModuleTSXError(`Failed to transform typescript source file ${sourceFile.fileName}`, { cause });
+    throw new ModuleTSXError(
+      `Failed to transform typescript source file ${sourceFile.fileName}`,
+      { cause },
+    );
   }
 }

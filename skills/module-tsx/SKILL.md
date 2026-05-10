@@ -32,8 +32,8 @@ TypeScript and JSX support:
 
 ```html
 <script type="module-tsx">
-const greet = (name: string) => `Hello, ${name}!`
-console.log(greet("world"))
+  const greet = (name: string) => `Hello, ${name}!`
+  console.log(greet("world"))
 </script>
 ```
 
@@ -52,13 +52,13 @@ auto-injected:
 ```html
 <div id="root"></div>
 <script type="module-tsx">
-import { createRoot } from 'react-dom/client'
+  import { createRoot } from "react-dom/client";
 
-function App() {
-  return <h1>Hello!</h1>;   // React auto-injected, no import needed
-}
+  function App() {
+    return <h1>Hello!</h1>;   // React auto-injected, no import needed
+  }
 
-createRoot(document.getElementById('root')!).render(<App />)
+  createRoot(document.getElementById("root")!).render(<App />)
 </script>
 ```
 
@@ -75,8 +75,8 @@ createRoot(document.getElementById('root')!).render(<App />)
   <body>
     <div id="root"></div>
     <script type="module-tsx">
-      import { createRoot } from 'react-dom/client';
-      import '@tailwindcss/browser'
+      import { createRoot } from "react-dom/client";
+      import "@tailwindcss/browser";
 
       interface Props { name: string }
 
@@ -84,7 +84,7 @@ createRoot(document.getElementById('root')!).render(<App />)
         return <h1 class="text-2xl font-bold">Hello, {name}!</h1>;
       }
 
-      createRoot(document.getElementById('root')!).render(<Greeting name="world" />);
+      createRoot(document.getElementById("root")!).render(<Greeting name="world" />);
     </script>
   </body>
 </html>
@@ -93,6 +93,7 @@ createRoot(document.getElementById('root')!).render(<App />)
 ## Import maps — only when you need them
 
 An import map is optional. Use one only when you need to:
+
 - **Pin a specific version** (e.g. `react@18` instead of latest)
 - **Deduplicate peer dependencies** across packages
 
@@ -101,12 +102,12 @@ module-tsx reads it at startup:
 
 ```html
 <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@18",
-    "react-dom/client": "https://esm.sh/react-dom@18/client"
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18",
+      "react-dom/client": "https://esm.sh/react-dom@18/client"
+    }
   }
-}
 </script>
 <script type="module" src="https://esm.sh/module-tsx"></script>
 ```
@@ -119,19 +120,19 @@ crashes. Use `?deps=` to tell the CDN which React to bundle against:
 
 ```html
 <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@18",
-    "react-dom": "https://esm.sh/react-dom@18",
-    "react-dom/": "https://esm.sh/react-dom@18/",
-    "@radix-ui/themes": "https://esm.sh/@radix-ui/themes?deps=react@18,react-dom@18",
-    "@radix-ui/themes/": "https://esm.sh/@radix-ui/themes/"
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18",
+      "react-dom": "https://esm.sh/react-dom@18",
+      "react-dom/": "https://esm.sh/react-dom@18/",
+      "@radix-ui/themes": "https://esm.sh/@radix-ui/themes?deps=react@18,react-dom@18",
+      "@radix-ui/themes/": "https://esm.sh/@radix-ui/themes/"
+    }
   }
-}
 </script>
 <script type="module" src="https://esm.sh/module-tsx"></script>
 <script type="module-tsx">
-import '@radix-ui/themes/styles.css' // .css files will be injected as <style> tags
+  import '@radix-ui/themes/styles.css' // .css files will be injected as <style> tags
 </script>
 ```
 
@@ -140,14 +141,14 @@ import '@radix-ui/themes/styles.css' // .css files will be injected as <style> t
 `.ts` and `.tsx` files can be imported relatively — fetched and transpiled on the fly:
 
 ```tsx
-import { Button } from './components/Button.tsx'
+import { Button } from "./components/Button.tsx";
 ```
 
 ## CSS imports
 
 ```tsx
-import './style.css'                     // injects a <style> tag into <head>
-import styles from './button.module.css' // returns { root: "abc123_root", ... }
+import "./style.css"; // injects a <style> tag into <head>
+import styles from "./button.module.css"; // returns { root: "abc123_root", ... }
 ```
 
 ## Common mistakes

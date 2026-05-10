@@ -31,12 +31,18 @@ export class ImportMap {
 
   /** Parse a JSON import map string against a base URL. */
   static parse(input: string, baseURL: URL | string): ImportMap {
-    return parseImportMapString(input, typeof baseURL === "string" ? new URL(baseURL) : baseURL);
+    return parseImportMapString(
+      input,
+      typeof baseURL === "string" ? new URL(baseURL) : baseURL,
+    );
   }
 
   /** Build an ImportMap from a plain object (same shape as the JSON format). */
   static of(json: object, baseURL: URL | string): ImportMap {
-    return parseImportMapString(JSON.stringify(json), typeof baseURL === "string" ? new URL(baseURL) : baseURL);
+    return parseImportMapString(
+      JSON.stringify(json),
+      typeof baseURL === "string" ? new URL(baseURL) : baseURL,
+    );
   }
 
   /** Merge newImportMap into oldImportMap in place (spec § "merge existing and new import maps"). */
@@ -45,7 +51,11 @@ export class ImportMap {
     newImportMap: ImportMap,
     resolvedModuleSet: ReadonlyArray<SpecifierResolutionRecord> = [],
   ): void {
-    mergeExistingAndNewImportMaps(oldImportMap, newImportMap, resolvedModuleSet);
+    mergeExistingAndNewImportMaps(
+      oldImportMap,
+      newImportMap,
+      resolvedModuleSet,
+    );
   }
 
   /** Resolve a specifier against an import map (spec § "resolve a module specifier"). */
@@ -66,8 +76,15 @@ export class ImportMap {
 // ---------------------------------------------------------------------------
 // Spec § "resolve a URL-like module specifier"
 // ---------------------------------------------------------------------------
-function resolveURLLikeModuleSpecifier(specifier: string, baseURL: URL): URL | null {
-  if (specifier.startsWith("/") || specifier.startsWith("./") || specifier.startsWith("../")) {
+function resolveURLLikeModuleSpecifier(
+  specifier: string,
+  baseURL: URL,
+): URL | null {
+  if (
+    specifier.startsWith("/") ||
+    specifier.startsWith("./") ||
+    specifier.startsWith("../")
+  ) {
     try {
       return new URL(specifier, baseURL);
     } catch {
@@ -84,7 +101,10 @@ function resolveURLLikeModuleSpecifier(specifier: string, baseURL: URL): URL | n
 // ---------------------------------------------------------------------------
 // Spec § "normalize a specifier key"
 // ---------------------------------------------------------------------------
-function normalizeSpecifierKey(specifierKey: string, baseURL: URL): string | null {
+function normalizeSpecifierKey(
+  specifierKey: string,
+  baseURL: URL,
+): string | null {
   if (specifierKey === "") {
     warn("Specifier keys may not be the empty string.");
     return null;
@@ -110,7 +130,9 @@ function sortAndNormalizeSpecifierMap(
     if (normalizedKey === null) continue;
 
     if (typeof value !== "string") {
-      warn(`Import map addresses must be strings; ignoring key "${specifierKey}".`);
+      warn(
+        `Import map addresses must be strings; ignoring key "${specifierKey}".`,
+      );
       normalized.set(normalizedKey, null);
       continue;
     }
@@ -146,13 +168,17 @@ function sortAndNormalizeScopes(
 ): Map<string, ModuleSpecifierMap> {
   const normalized = new Map<string, ModuleSpecifierMap>();
 
-  for (const [scopePrefix, potentialSpecifierMap] of Object.entries(originalMap)) {
+  for (const [scopePrefix, potentialSpecifierMap] of Object.entries(
+    originalMap,
+  )) {
     if (
       typeof potentialSpecifierMap !== "object" ||
       potentialSpecifierMap === null ||
       Array.isArray(potentialSpecifierMap)
     ) {
-      throw new TypeError(`The value of the scope with prefix "${scopePrefix}" must be a JSON object.`);
+      throw new TypeError(
+        `The value of the scope with prefix "${scopePrefix}" must be a JSON object.`,
+      );
     }
 
     let scopePrefixURL: URL;
@@ -165,7 +191,10 @@ function sortAndNormalizeScopes(
 
     normalized.set(
       scopePrefixURL.href,
-      sortAndNormalizeSpecifierMap(potentialSpecifierMap as Record<string, unknown>, baseURL),
+      sortAndNormalizeSpecifierMap(
+        potentialSpecifierMap as Record<string, unknown>,
+        baseURL,
+      ),
     );
   }
 
@@ -198,7 +227,9 @@ function normalizeModuleIntegrityMap(
 }
 
 function sortedDescending<V>(map: Map<string, V>): Map<string, V> {
-  return new Map([...map.entries()].sort((a, b) => (a[0] < b[0] ? 1 : a[0] > b[0] ? -1 : 0)));
+  return new Map(
+    [...map.entries()].sort((a, b) => (a[0] < b[0] ? 1 : a[0] > b[0] ? -1 : 0)),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -220,26 +251,47 @@ function parseImportMapString(input: string, baseURL: URL): ImportMap {
 
   let imports: ModuleSpecifierMap = new Map();
   if ("imports" in obj) {
-    if (typeof obj.imports !== "object" || obj.imports === null || Array.isArray(obj.imports)) {
+    if (
+      typeof obj.imports !== "object" ||
+      obj.imports === null ||
+      Array.isArray(obj.imports)
+    ) {
       throw new TypeError('Import map: "imports" must be a JSON object.');
     }
-    imports = sortAndNormalizeSpecifierMap(obj.imports as Record<string, unknown>, baseURL);
+    imports = sortAndNormalizeSpecifierMap(
+      obj.imports as Record<string, unknown>,
+      baseURL,
+    );
   }
 
   let scopes: Map<string, ModuleSpecifierMap> = new Map();
   if ("scopes" in obj) {
-    if (typeof obj.scopes !== "object" || obj.scopes === null || Array.isArray(obj.scopes)) {
+    if (
+      typeof obj.scopes !== "object" ||
+      obj.scopes === null ||
+      Array.isArray(obj.scopes)
+    ) {
       throw new TypeError('Import map: "scopes" must be a JSON object.');
     }
-    scopes = sortAndNormalizeScopes(obj.scopes as Record<string, unknown>, baseURL);
+    scopes = sortAndNormalizeScopes(
+      obj.scopes as Record<string, unknown>,
+      baseURL,
+    );
   }
 
   let integrity: Map<string, string> = new Map();
   if ("integrity" in obj) {
-    if (typeof obj.integrity !== "object" || obj.integrity === null || Array.isArray(obj.integrity)) {
+    if (
+      typeof obj.integrity !== "object" ||
+      obj.integrity === null ||
+      Array.isArray(obj.integrity)
+    ) {
       throw new TypeError('Import map: "integrity" must be a JSON object.');
     }
-    integrity = normalizeModuleIntegrityMap(obj.integrity as Record<string, unknown>, baseURL);
+    integrity = normalizeModuleIntegrityMap(
+      obj.integrity as Record<string, unknown>,
+      baseURL,
+    );
   }
 
   for (const key of Object.keys(obj)) {
@@ -254,11 +306,16 @@ function parseImportMapString(input: string, baseURL: URL): ImportMap {
 // ---------------------------------------------------------------------------
 // Spec § "merge module specifier maps"
 // ---------------------------------------------------------------------------
-function mergeSpecifierMaps(newMap: ModuleSpecifierMap, oldMap: ModuleSpecifierMap): ModuleSpecifierMap {
+function mergeSpecifierMaps(
+  newMap: ModuleSpecifierMap,
+  oldMap: ModuleSpecifierMap,
+): ModuleSpecifierMap {
   const merged = new Map(oldMap);
   for (const [specifier, url] of newMap) {
     if (merged.has(specifier)) {
-      warn(`Import map merge: ignoring duplicate specifier key "${specifier}".`);
+      warn(
+        `Import map merge: ignoring duplicate specifier key "${specifier}".`,
+      );
       continue;
     }
     merged.set(specifier, url);
@@ -291,7 +348,8 @@ function mergeExistingAndNewImportMaps(
     for (const record of resolvedModuleSet) {
       const scopeMatchesRecord =
         scopePrefix === record.serializedBaseURL ||
-        (scopePrefix.endsWith("/") && record.serializedBaseURL.startsWith(scopePrefix));
+        (scopePrefix.endsWith("/") &&
+          record.serializedBaseURL.startsWith(scopePrefix));
 
       if (!scopeMatchesRecord) continue;
 
@@ -300,10 +358,13 @@ function mergeExistingAndNewImportMaps(
           specifierKey === record.specifier ||
           (specifierKey.endsWith("/") &&
             record.specifier.startsWith(specifierKey) &&
-            (record.specifierAsURL === null || isSpecialURL(record.specifierAsURL)));
+            (record.specifierAsURL === null ||
+              isSpecialURL(record.specifierAsURL)));
 
         if (specifierMatchesRecord) {
-          warn(`Import map merge: ignoring scope rule "${specifierKey}" under "${scopePrefix}" — already resolved.`);
+          warn(
+            `Import map merge: ignoring scope rule "${specifierKey}" under "${scopePrefix}" — already resolved.`,
+          );
           scopeImports.delete(specifierKey);
         }
       }
@@ -327,7 +388,9 @@ function mergeExistingAndNewImportMaps(
   // Step: merge integrity (first-wins for conflicts)
   for (const [url, integrity] of newImportMap.integrity) {
     if (oldImportMap.integrity.has(url)) {
-      warn(`Import map merge: ignoring duplicate integrity entry for "${url}".`);
+      warn(
+        `Import map merge: ignoring duplicate integrity entry for "${url}".`,
+      );
       continue;
     }
     oldImportMap.integrity.set(url, integrity);
@@ -337,7 +400,9 @@ function mergeExistingAndNewImportMaps(
   for (const record of resolvedModuleSet) {
     for (const specifierKey of [...newImportMapImports.keys()]) {
       if (specifierKey.startsWith(record.specifier)) {
-        warn(`Import map merge: ignoring global rule "${specifierKey}" — already resolved.`);
+        warn(
+          `Import map merge: ignoring global rule "${specifierKey}" — already resolved.`,
+        );
         newImportMapImports.delete(specifierKey);
       }
     }
@@ -384,7 +449,9 @@ function resolveImportsMatch(
   for (const [specifierKey, resolutionResult] of specifierMap) {
     if (specifierKey === normalizedSpecifier) {
       if (resolutionResult === null) {
-        throw new TypeError(`Resolution of "${specifierKey}" was blocked by a null entry in the import map.`);
+        throw new TypeError(
+          `Resolution of "${specifierKey}" was blocked by a null entry in the import map.`,
+        );
       }
       return resolutionResult;
     }
@@ -395,7 +462,9 @@ function resolveImportsMatch(
       (asURL === null || isSpecialURL(asURL))
     ) {
       if (resolutionResult === null) {
-        throw new TypeError(`Resolution of "${specifierKey}" was blocked by a null entry in the import map.`);
+        throw new TypeError(
+          `Resolution of "${specifierKey}" was blocked by a null entry in the import map.`,
+        );
       }
       const afterPrefix = normalizedSpecifier.slice(specifierKey.length);
       let url: URL;
@@ -419,7 +488,9 @@ function resolveImportsMatch(
 }
 
 function isSpecialURL(url: URL): boolean {
-  return ["ftp:", "file:", "http:", "https:", "ws:", "wss:"].includes(url.protocol);
+  return ["ftp:", "file:", "http:", "https:", "ws:", "wss:"].includes(
+    url.protocol,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -447,21 +518,37 @@ function resolveFromImportMap(
       scopePrefix === serializedBaseURL ||
       (scopePrefix.endsWith("/") && serializedBaseURL.startsWith(scopePrefix))
     ) {
-      const match = resolveImportsMatch(normalizedSpecifier, asURL, scopeImports);
+      const match = resolveImportsMatch(
+        normalizedSpecifier,
+        asURL,
+        scopeImports,
+      );
       if (match !== null) {
         return {
           url: match.href,
-          record: { serializedBaseURL, specifier: normalizedSpecifier, specifierAsURL: asURL },
+          record: {
+            serializedBaseURL,
+            specifier: normalizedSpecifier,
+            specifierAsURL: asURL,
+          },
         };
       }
     }
   }
 
-  const match = resolveImportsMatch(normalizedSpecifier, asURL, importMap.imports);
+  const match = resolveImportsMatch(
+    normalizedSpecifier,
+    asURL,
+    importMap.imports,
+  );
   if (match !== null) {
     return {
       url: match.href,
-      record: { serializedBaseURL, specifier: normalizedSpecifier, specifierAsURL: asURL },
+      record: {
+        serializedBaseURL,
+        specifier: normalizedSpecifier,
+        specifierAsURL: asURL,
+      },
     };
   }
 

@@ -7,19 +7,30 @@ export function needsReactImport(sourceFile: ts.SourceFile): boolean {
 
   function visitNode(node: ts.Node): void {
     // Check for JSX elements
-    if (ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node) || ts.isJsxFragment(node)) {
+    if (
+      ts.isJsxElement(node) ||
+      ts.isJsxSelfClosingElement(node) ||
+      ts.isJsxFragment(node)
+    ) {
       hasJSX = true;
     }
 
     // Check for React variable at module level
-    if (ts.isImportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+    if (
+      ts.isImportDeclaration(node) &&
+      node.moduleSpecifier &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    ) {
       if (node.importClause) {
         // Check default import: import React from 'xxx'
         if (node.importClause.name?.text === "React") {
           hasReactVariable = true;
         }
         // Check namespace import: import * as React from 'xxx'
-        if (node.importClause.namedBindings && ts.isNamespaceImport(node.importClause.namedBindings)) {
+        if (
+          node.importClause.namedBindings &&
+          ts.isNamespaceImport(node.importClause.namedBindings)
+        ) {
           if (node.importClause.namedBindings.name.text === "React") {
             hasReactVariable = true;
           }
@@ -28,7 +39,11 @@ export function needsReactImport(sourceFile: ts.SourceFile): boolean {
     }
 
     // Check variable declarations: const React = ...
-    if (ts.isVariableDeclaration(node) && node.name && ts.isIdentifier(node.name)) {
+    if (
+      ts.isVariableDeclaration(node) &&
+      node.name &&
+      ts.isIdentifier(node.name)
+    ) {
       if (node.name.text === "React") {
         hasReactVariable = true;
       }
@@ -47,7 +62,11 @@ export function addReactImport(sourceFile: ts.SourceFile): ts.SourceFile {
   let reactSpecifier = "react";
 
   function findReactSpecifier(node: ts.Node): void {
-    if (ts.isImportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+    if (
+      ts.isImportDeclaration(node) &&
+      node.moduleSpecifier &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    ) {
       const specifier = node.moduleSpecifier.text;
       // Match react specifiers: "react", "react@xxx", "*/react", "*/react@xxx"
       if (
@@ -68,7 +87,11 @@ export function addReactImport(sourceFile: ts.SourceFile): ts.SourceFile {
   // Create: import React from "react" (or found specifier);
   const reactImport = ts.factory.createImportDeclaration(
     undefined,
-    ts.factory.createImportClause(false, ts.factory.createIdentifier("React"), undefined),
+    ts.factory.createImportClause(
+      false,
+      ts.factory.createIdentifier("React"),
+      undefined,
+    ),
     ts.factory.createStringLiteral(reactSpecifier),
     undefined,
   );

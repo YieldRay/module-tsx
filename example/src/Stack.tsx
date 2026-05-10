@@ -2,7 +2,10 @@ import React, { forwardRef, useId } from "react";
 import type { CSSProperties, ReactElement, SVGProps } from "react";
 import type { IconProps } from "./Icon.tsx";
 
-export interface StackProps extends Omit<SVGProps<SVGSVGElement>, "children" | "color" | "rotate"> {
+export interface StackProps extends Omit<
+  SVGProps<SVGSVGElement>,
+  "children" | "color" | "rotate"
+> {
   title?: string | null;
   description?: string | null;
   size?: number | string | null;
@@ -47,14 +50,18 @@ export const Stack = forwardRef<SVGSVGElement, StackProps>(
       }
 
       let scaledSize = childElement.props.size;
-      if (typeof size === "number" && typeof childElement.props.size === "number") {
+      if (
+        typeof size === "number" &&
+        typeof childElement.props.size === "number"
+      ) {
         scaledSize = childElement.props.size / size;
       }
 
       const props: Partial<IconProps> = {
         size: scaledSize,
         color: color === null ? childElement.props.color : color,
-        horizontal: horizontal === null ? childElement.props.horizontal : horizontal,
+        horizontal:
+          horizontal === null ? childElement.props.horizontal : horizontal,
         vertical: vertical === null ? childElement.props.vertical : vertical,
         rotate: rotate === null ? childElement.props.rotate : rotate,
         spin: spin === null ? childElement.props.spin : spin,
@@ -67,7 +74,8 @@ export const Stack = forwardRef<SVGSVGElement, StackProps>(
     const computedStyle: CSSProperties = { ...style };
 
     if (size !== null) {
-      computedStyle.width = typeof size === "string" ? size : `${size * 1.5}rem`;
+      computedStyle.width =
+        typeof size === "string" ? size : `${size * 1.5}rem`;
     }
 
     const labelledById = `stack_labelledby_${stackId}`;
@@ -76,7 +84,9 @@ export const Stack = forwardRef<SVGSVGElement, StackProps>(
     let role;
 
     if (title) {
-      ariaLabelledby = description ? `${labelledById} ${describedById}` : labelledById;
+      ariaLabelledby = description
+        ? `${labelledById} ${describedById}`
+        : labelledById;
     } else {
       role = "presentation";
       if (description) {
@@ -85,14 +95,25 @@ export const Stack = forwardRef<SVGSVGElement, StackProps>(
     }
 
     return (
-      <svg ref={ref} viewBox="0 0 24 24" style={computedStyle} role={role} aria-labelledby={ariaLabelledby} {...rest}>
+      <svg
+        ref={ref}
+        viewBox="0 0 24 24"
+        style={computedStyle}
+        role={role}
+        aria-labelledby={ariaLabelledby}
+        {...rest}
+      >
         {title && <title id={labelledById}>{title}</title>}
         {description && <desc id={describedById}>{description}</desc>}
 
         {anySpin && (
           <style>
-            {"@keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }"}
-            {"@keyframes spin-inverse { from { transform: rotate(0deg) } to { transform: rotate(-360deg) } }"}
+            {
+              "@keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }"
+            }
+            {
+              "@keyframes spin-inverse { from { transform: rotate(0deg) } to { transform: rotate(-360deg) } }"
+            }
           </style>
         )}
 

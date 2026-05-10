@@ -98,18 +98,38 @@ const configRows = [
   },
   {
     prop: "resolveBareSpecifier",
-    type: 'string | ((s: string) => string)',
+    type: "string | ((s: string) => string)",
     default: '"https://esm.sh/"',
     desc: 'CDN base URL or resolver function for bare specifiers like "react"',
   },
 ];
 
 const eventRows = [
-  { name: "import", detail: "{ id: string }", desc: "Fired when starting to import a module" },
-  { name: "import:error", detail: "{ id: string; error: any }", desc: "Fired when an import fails" },
-  { name: "transform", detail: "{ sourceUrl: string }", desc: "Fired when starting to transform source code" },
-  { name: "transform:error", detail: "{ sourceUrl: string; error: any }", desc: "Fired when transformation fails" },
-  { name: "*", detail: "{ type: string; payload: any }", desc: "Wildcard — fires for every event with its type and payload" },
+  {
+    name: "import",
+    detail: "{ id: string }",
+    desc: "Fired when starting to import a module",
+  },
+  {
+    name: "import:error",
+    detail: "{ id: string; error: any }",
+    desc: "Fired when an import fails",
+  },
+  {
+    name: "transform",
+    detail: "{ sourceUrl: string }",
+    desc: "Fired when starting to transform source code",
+  },
+  {
+    name: "transform:error",
+    detail: "{ sourceUrl: string; error: any }",
+    desc: "Fired when transformation fails",
+  },
+  {
+    name: "*",
+    detail: "{ type: string; payload: any }",
+    desc: "Wildcard — fires for every event with its type and payload",
+  },
 ];
 
 export default function ApiReference() {
@@ -121,9 +141,9 @@ export default function ApiReference() {
         <code>new ModuleTSX(config?)</code>
       </h2>
       <p>
-        Creates a new ModuleTSX instance. The singleton <code>instance</code> (used by{" "}
-        <code>{"<script type=\"module-tsx\">"}</code> auto-processing) is exported from the ESM
-        build.
+        Creates a new ModuleTSX instance. The singleton <code>instance</code>{" "}
+        (used by <code>{'<script type="module-tsx">'}</code> auto-processing) is
+        exported from the ESM build.
       </p>
       <CodeBlock code={CONSTRUCTOR_EXAMPLE} language="tsx" />
 
@@ -141,9 +161,15 @@ export default function ApiReference() {
           <tbody>
             {configRows.map((row) => (
               <tr key={row.prop}>
-                <td><code>{row.prop}</code></td>
-                <td><code>{row.type}</code></td>
-                <td><code>{row.default}</code></td>
+                <td>
+                  <code>{row.prop}</code>
+                </td>
+                <td>
+                  <code>{row.type}</code>
+                </td>
+                <td>
+                  <code>{row.default}</code>
+                </td>
                 <td>{row.desc}</td>
               </tr>
             ))}
@@ -155,8 +181,8 @@ export default function ApiReference() {
         <code>instance.import(id)</code>
       </h2>
       <p>
-        Imports a module by specifier. Handles bare specifiers, relative paths, and absolute URLs.
-        Returns a promise resolving to the module's exports.
+        Imports a module by specifier. Handles bare specifiers, relative paths,
+        and absolute URLs. Returns a promise resolving to the module's exports.
       </p>
       <CodeBlock code={IMPORT_EXAMPLE} language="tsx" />
 
@@ -165,14 +191,15 @@ export default function ApiReference() {
       </h2>
       <p>
         Compiles and executes TypeScript/TSX source code provided as a string.{" "}
-        <code>sourceUrl</code> is used as the base for resolving relative imports within the code.
+        <code>sourceUrl</code> is used as the base for resolving relative
+        imports within the code.
       </p>
       <CodeBlock code={IMPORT_CODE_EXAMPLE} language="tsx" />
 
       <h2>Events</h2>
       <p>
-        <code>ModuleTSX</code> extends <code>EventTarget</code>. You can listen to lifecycle
-        events for monitoring and error handling:
+        <code>ModuleTSX</code> extends <code>EventTarget</code>. You can listen
+        to lifecycle events for monitoring and error handling:
       </p>
       <CodeBlock code={EVENTS_EXAMPLE} language="tsx" />
 
@@ -188,8 +215,12 @@ export default function ApiReference() {
           <tbody>
             {eventRows.map((row) => (
               <tr key={row.name}>
-                <td><code>{row.name}</code></td>
-                <td><code>{row.detail}</code></td>
+                <td>
+                  <code>{row.name}</code>
+                </td>
+                <td>
+                  <code>{row.detail}</code>
+                </td>
                 <td>{row.desc}</td>
               </tr>
             ))}
@@ -199,9 +230,10 @@ export default function ApiReference() {
 
       <h2>Singleton & ESM</h2>
       <p>
-        The ESM build exports <code>instance</code> (the singleton used for auto-processing) and
-        the <code>ModuleTSX</code> class. Load it with <code>{'<script type="module">'}</code> —
-        it registers the <code>DOMContentLoaded</code> listener automatically.
+        The ESM build exports <code>instance</code> (the singleton used for
+        auto-processing) and the <code>ModuleTSX</code> class. Load it with{" "}
+        <code>{'<script type="module">'}</code> — it registers the{" "}
+        <code>DOMContentLoaded</code> listener automatically.
       </p>
       <CodeBlock code={SINGLETON_EXAMPLE} language="html" />
 

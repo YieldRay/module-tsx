@@ -36,27 +36,31 @@ export default function LoadingFiles() {
 
       <h2>Relative Imports</h2>
       <p>
-        Import local <code>.tsx</code>, <code>.ts</code>, and <code>.js</code> files using
-        relative paths. Each file is fetched via HTTP, compiled, and cached as a Blob URL.
-        Circular imports are handled safely.
+        Import local <code>.tsx</code>, <code>.ts</code>, and <code>.js</code>{" "}
+        files using relative paths. Each file is fetched via HTTP, compiled, and
+        cached as a Blob URL. Circular imports are handled safely.
       </p>
       <p>
-        <strong>File extensions are required.</strong> Unlike bundlers that resolve bare paths,
-        module-tsx fetches files directly over HTTP — so you must include the full extension:{" "}
-        <code>import App from "./App.tsx"</code>, not <code>import App from "./App"</code>.
+        <strong>File extensions are required.</strong> Unlike bundlers that
+        resolve bare paths, module-tsx fetches files directly over HTTP — so you
+        must include the full extension:{" "}
+        <code>import App from "./App.tsx"</code>, not{" "}
+        <code>import App from "./App"</code>.
       </p>
       <CodeBlock code={RELATIVE_IMPORT} language="tsx" />
 
       <h2>npm Packages</h2>
       <p>
         Bare specifiers (no path prefix) are automatically resolved to{" "}
-        <code>https://esm.sh/</code>. Any npm package that ships an ES module build works:
+        <code>https://esm.sh/</code>. Any npm package that ships an ES module
+        build works:
       </p>
       <CodeBlock code={NPM_IMPORT} language="tsx" />
 
       <h2>Direct URL Imports</h2>
       <p>
-        Absolute <code>https://</code> URLs are imported directly without transformation:
+        Absolute <code>https://</code> URLs are imported directly without
+        transformation:
       </p>
       <CodeBlock code={CDN_IMPORT} language="tsx" />
 
@@ -72,15 +76,17 @@ export default function LoadingFiles() {
 
       <h2>npm: Prefix</h2>
       <p>
-        The <code>npm:</code> prefix explicitly routes to esm.sh (same as bare specifiers):
+        The <code>npm:</code> prefix explicitly routes to esm.sh (same as bare
+        specifiers):
       </p>
       <CodeBlock code={NPM_PREFIX} language="tsx" />
 
       <h2>Custom CDN</h2>
       <p>
-        You can change the default CDN by configuring the <code>resolveBareSpecifier</code>{" "}
-        option on the <code>ModuleTSX</code> instance. See the{" "}
-        <a href="#api-reference">API Reference</a> for details.
+        You can change the default CDN by configuring the{" "}
+        <code>resolveBareSpecifier</code> option on the <code>ModuleTSX</code>{" "}
+        instance. See the <a href="#api-reference">API Reference</a> for
+        details.
       </p>
     </article>
   );

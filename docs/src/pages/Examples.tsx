@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Button, TextField, Switch, Tabs, LinearProgressIndicator } from "soda-material";
+import {
+  Button,
+  TextField,
+  Switch,
+  Tabs,
+  LinearProgressIndicator,
+} from "soda-material";
 import Demo from "../components/Demo.tsx";
 import CodeBlock from "../components/CodeBlock.tsx";
 
@@ -127,7 +133,12 @@ function TabsDemo() {
   const [active, setActive] = useState("overview");
   return (
     <div>
-      <Tabs value={active} onChange={setActive} items={tabs} variant="secondary" />
+      <Tabs
+        value={active}
+        onChange={setActive}
+        items={tabs}
+        variant="secondary"
+      />
       <p className="py-4">{content[active]}</p>
     </div>
   );
@@ -153,7 +164,9 @@ function ProgressDemo() {
           max={1}
           step={0.01}
           value={value}
-          onInput={(e) => setValue(parseFloat((e.target as HTMLInputElement).value))}
+          onInput={(e) =>
+            setValue(parseFloat((e.target as HTMLInputElement).value))
+          }
           className="w-full"
         />
       )}
@@ -166,7 +179,8 @@ export default function Examples() {
     <article>
       <h1 className="text-4xl font-bold mt-0">Examples</h1>
       <p className="text-lg leading-relaxed text-[var(--md-sys-color-on-surface-variant)]">
-        Live interactive demos — these components are running via module-tsx right now.
+        Live interactive demos — these components are running via module-tsx
+        right now.
       </p>
 
       <h2>Counter</h2>

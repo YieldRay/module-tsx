@@ -43,29 +43,36 @@ export default function CssModules() {
     <article>
       <h1 className="text-4xl font-bold mt-0">CSS & CSS Modules</h1>
       <p className="text-lg leading-relaxed text-[var(--md-sys-color-on-surface-variant)]">
-        module-tsx handles both regular CSS imports and CSS Modules out of the box.
+        module-tsx handles both regular CSS imports and CSS Modules out of the
+        box.
       </p>
 
       <h2>Regular CSS</h2>
       <p>
-        Importing a <code>.css</code> file injects its contents as a <code>{"<style>"}</code>{" "}
-        tag in <code>{"<head>"}</code>. CSS from npm package subpaths ending in{" "}
-        <code>.css</code> is also handled automatically:
+        Importing a <code>.css</code> file injects its contents as a{" "}
+        <code>{"<style>"}</code> tag in <code>{"<head>"}</code>. CSS from npm
+        package subpaths ending in <code>.css</code> is also handled
+        automatically:
       </p>
       <CodeBlock code={CSS_IMPORT} language="tsx" />
       <CodeBlock code={CSS_FILE} language="css" filename="styles.css" />
 
       <h2>CSS Modules</h2>
       <p>
-        Files ending in <code>.module.css</code> are treated as CSS Modules. Class names are
-        scoped by appending a short hash, preventing style collisions between components:
+        Files ending in <code>.module.css</code> are treated as CSS Modules.
+        Class names are scoped by appending a short hash, preventing style
+        collisions between components:
       </p>
       <CodeBlock code={CSS_MODULE_IMPORT} language="tsx" />
-      <CodeBlock code={CSS_MODULE_FILE} language="css" filename="Button.module.css" />
+      <CodeBlock
+        code={CSS_MODULE_FILE}
+        language="css"
+        filename="Button.module.css"
+      />
 
       <p>
-        The default export is an object mapping your original class names to the hashed
-        versions. Only classes you actually use are included.
+        The default export is an object mapping your original class names to the
+        hashed versions. Only classes you actually use are included.
       </p>
     </article>
   );

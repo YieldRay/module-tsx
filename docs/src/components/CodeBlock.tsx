@@ -22,7 +22,11 @@ interface CodeBlockProps {
   filename?: string;
 }
 
-export default function CodeBlock({ code, language = "tsx", filename }: CodeBlockProps) {
+export default function CodeBlock({
+  code,
+  language = "tsx",
+  filename,
+}: CodeBlockProps) {
   const codeRef = useRef<HTMLElement>(null);
   const [copied, setCopied] = useState(false);
 
@@ -30,7 +34,9 @@ export default function CodeBlock({ code, language = "tsx", filename }: CodeBloc
     const el = codeRef.current;
     if (!el) return;
     el.textContent = code;
-    highlightElement(el, LANG_MAP[language] ?? language, "multiline", { hideLineNumbers: true });
+    highlightElement(el, LANG_MAP[language] ?? language, "multiline", {
+      hideLineNumbers: true,
+    });
   }, [code, language]);
 
   const handleCopy = () => {
@@ -48,9 +54,17 @@ export default function CodeBlock({ code, language = "tsx", filename }: CodeBloc
         </div>
       )}
       <div className={`absolute ${filename ? "top-7" : "top-1"} right-1 z-10`}>
-        <IconButton path={copied ? mdiCheck : mdiContentCopy} size={0.8} onClick={handleCopy} />
+        <IconButton
+          path={copied ? mdiCheck : mdiContentCopy}
+          size={0.8}
+          onClick={handleCopy}
+        />
       </div>
-      <code ref={codeRef} className="block overflow-x-auto" style={{ scrollbarWidth: "thin" }} />
+      <code
+        ref={codeRef}
+        className="block overflow-x-auto"
+        style={{ scrollbarWidth: "thin" }}
+      />
     </div>
   );
 }

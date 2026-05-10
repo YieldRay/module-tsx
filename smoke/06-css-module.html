@@ -20,21 +20,40 @@
             baseUrl: "https://example.com/",
             fetch: async (url) => {
               if (url.endsWith("button.module.css"))
-                return new Response(".root { color: red; } .label { font-size: 14px; }", { status: 200 });
+                return new Response(
+                  ".root { color: red; } .label { font-size: 14px; }",
+                  { status: 200 },
+                );
               if (url.endsWith("main.ts"))
-                return new Response(`
+                return new Response(
+                  `
                   import styles from "./button.module.css";
                   export { styles };
-                `, { status: 200 });
+                `,
+                  { status: 200 },
+                );
               throw new Error(`404: ${url}`);
             },
           });
 
           const { styles } = await m.import("https://example.com/main.ts");
-          assert.ok(typeof styles === "object" && styles !== null, "styles is an object");
-          assert.ok(typeof styles.root === "string", "styles.root is a string class name");
-          assert.ok(typeof styles.label === "string", "styles.label is a string class name");
-          assert.notEqual(styles.root, "root", "class name is scoped (not the original)");
+          assert.ok(
+            typeof styles === "object" && styles !== null,
+            "styles is an object",
+          );
+          assert.ok(
+            typeof styles.root === "string",
+            "styles.root is a string class name",
+          );
+          assert.ok(
+            typeof styles.label === "string",
+            "styles.label is a string class name",
+          );
+          assert.notEqual(
+            styles.root,
+            "root",
+            "class name is scoped (not the original)",
+          );
         });
       });
     </script>

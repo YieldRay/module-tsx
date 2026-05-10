@@ -10,17 +10,26 @@ describe("needsReactImport", () => {
   });
 
   it("returns false when React is already default-imported", () => {
-    const sf = createSourceFile(`import React from "react";\nconst el = <div />;`, "test.tsx");
+    const sf = createSourceFile(
+      `import React from "react";\nconst el = <div />;`,
+      "test.tsx",
+    );
     assert.ok(!needsReactImport(sf));
   });
 
   it("returns false when React is namespace-imported", () => {
-    const sf = createSourceFile(`import * as React from "react";\nconst el = <div />;`, "test.tsx");
+    const sf = createSourceFile(
+      `import * as React from "react";\nconst el = <div />;`,
+      "test.tsx",
+    );
     assert.ok(!needsReactImport(sf));
   });
 
   it("returns false when React is a variable declaration", () => {
-    const sf = createSourceFile(`const React = { createElement: () => {} };\nconst el = <div />;`, "test.tsx");
+    const sf = createSourceFile(
+      `const React = { createElement: () => {} };\nconst el = <div />;`,
+      "test.tsx",
+    );
     assert.ok(!needsReactImport(sf));
   });
 

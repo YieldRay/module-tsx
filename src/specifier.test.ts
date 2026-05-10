@@ -1,6 +1,11 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { isBareSpecifier, isRelativeSpecifier, collectSpecifiers, createRewriteImportTransformer } from "./specifier.ts";
+import {
+  isBareSpecifier,
+  isRelativeSpecifier,
+  collectSpecifiers,
+  createRewriteImportTransformer,
+} from "./specifier.ts";
 import { createSourceFile, printSourceFile, transform } from "./ts.ts";
 
 describe("isBareSpecifier", () => {
@@ -42,7 +47,10 @@ describe("isRelativeSpecifier", () => {
 
 describe("collectSpecifiers", () => {
   it("collects static import specifiers", () => {
-    const sf = createSourceFile(`import foo from "react";\nimport bar from "./bar.ts";`, "test.ts");
+    const sf = createSourceFile(
+      `import foo from "react";\nimport bar from "./bar.ts";`,
+      "test.ts",
+    );
     const specs = collectSpecifiers(sf);
     assert.ok(specs.has("react"));
     assert.ok(specs.has("./bar.ts"));
@@ -72,28 +80,38 @@ describe("collectSpecifiers", () => {
 describe("createRewriteImportTransformer", () => {
   const rewrite = (code: string, map: Record<string, string>): string => {
     const sf = createSourceFile(code, "test.ts");
-    const transformed = transform(sf, [createRewriteImportTransformer(new Map(Object.entries(map)))]);
+    const transformed = transform(sf, [
+      createRewriteImportTransformer(new Map(Object.entries(map))),
+    ]);
     return printSourceFile(transformed);
   };
 
   it("rewrites static import specifier", () => {
-    const out = rewrite(`import React from "react";\nconsole.log(React);`, { react: "https://esm.sh/react" });
+    const out = rewrite(`import React from "react";\nconsole.log(React);`, {
+      react: "https://esm.sh/react",
+    });
     assert.ok(out.includes("https://esm.sh/react"), out);
     assert.ok(!out.includes('"react"'), out);
   });
 
   it("rewrites re-export specifier", () => {
-    const out = rewrite(`export { foo } from "lib";`, { lib: "https://esm.sh/lib" });
+    const out = rewrite(`export { foo } from "lib";`, {
+      lib: "https://esm.sh/lib",
+    });
     assert.ok(out.includes("https://esm.sh/lib"), out);
   });
 
   it("rewrites dynamic import specifier", () => {
-    const out = rewrite(`const m = import("pkg");`, { pkg: "https://esm.sh/pkg" });
+    const out = rewrite(`const m = import("pkg");`, {
+      pkg: "https://esm.sh/pkg",
+    });
     assert.ok(out.includes("https://esm.sh/pkg"), out);
   });
 
   it("leaves unmapped specifiers unchanged", () => {
-    const out = rewrite(`import foo from "unchanged";\nconsole.log(foo);`, { other: "https://esm.sh/other" });
+    const out = rewrite(`import foo from "unchanged";\nconsole.log(foo);`, {
+      other: "https://esm.sh/other",
+    });
     assert.ok(out.includes('"unchanged"'), out);
   });
 });

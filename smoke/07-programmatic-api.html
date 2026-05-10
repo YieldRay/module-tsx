@@ -18,7 +18,9 @@
         test("emits 'import' event on m.import()", async (assert) => {
           const m = new ModuleTSX({
             baseUrl: location.href,
-            fetch: async () => { throw new Error("stop"); },
+            fetch: async () => {
+              throw new Error("stop");
+            },
           });
           const ids = [];
           m.addEventListener("import", (e) => ids.push(e.detail.id));
@@ -30,12 +32,20 @@
         test("emits 'import:error' when fetch fails", async (assert) => {
           const m = new ModuleTSX({
             baseUrl: location.href,
-            fetch: async () => { throw new Error("network down"); },
+            fetch: async () => {
+              throw new Error("network down");
+            },
           });
           let errorId;
-          m.addEventListener("import:error", (e) => { errorId = e.detail.id; });
+          m.addEventListener("import:error", (e) => {
+            errorId = e.detail.id;
+          });
           await m.import("react").catch(() => {});
-          assert.strictEqual(errorId, "https://esm.sh/react", "error fired with resolved URL");
+          assert.strictEqual(
+            errorId,
+            "https://esm.sh/react",
+            "error fired with resolved URL",
+          );
         });
 
         test("emits 'transform' event on importCode()", async (assert) => {
@@ -43,7 +53,10 @@
           const urls = [];
           m.addEventListener("transform", (e) => urls.push(e.detail.sourceUrl));
           await m.importCode("https://example.com/x.ts", `export const x = 1;`);
-          assert.ok(urls.includes("https://example.com/x.ts"), "transform event fired with sourceUrl");
+          assert.ok(
+            urls.includes("https://example.com/x.ts"),
+            "transform event fired with sourceUrl",
+          );
         });
 
         test("emits '*' wildcard event for all events", async (assert) => {
@@ -58,8 +71,13 @@
           let called = false;
           const m = new ModuleTSX({
             baseUrl: location.href,
-            fetch: async () => { throw new Error("stop"); },
-            resolveBareSpecifier: (s) => { called = true; return `https://cdn.example/${s}`; },
+            fetch: async () => {
+              throw new Error("stop");
+            },
+            resolveBareSpecifier: (s) => {
+              called = true;
+              return `https://cdn.example/${s}`;
+            },
           });
           m.addEventListener("import:error", () => {});
           await m.import("vue").catch(() => {});

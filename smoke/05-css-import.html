@@ -22,9 +22,15 @@
             baseUrl: "https://example.com/",
             fetch: async (url) => {
               if (url.endsWith("style.css"))
-                return new Response(".smoke-css-test { color: rgb(255, 0, 0); }", { status: 200 });
+                return new Response(
+                  ".smoke-css-test { color: rgb(255, 0, 0); }",
+                  { status: 200 },
+                );
               if (url.endsWith("main.ts"))
-                return new Response(`import "./style.css"; export const ok = true;`, { status: 200 });
+                return new Response(
+                  `import "./style.css"; export const ok = true;`,
+                  { status: 200 },
+                );
               throw new Error(`404: ${url}`);
             },
           });
@@ -36,8 +42,9 @@
           assert.ok(stylesAfter > stylesBefore, "a <style> tag was injected");
 
           // verify the injected style contains our CSS
-          const injected = [...document.head.querySelectorAll("style")]
-            .some(s => s.textContent.includes(".smoke-css-test"));
+          const injected = [...document.head.querySelectorAll("style")].some(
+            (s) => s.textContent.includes(".smoke-css-test"),
+          );
           assert.ok(injected, "injected <style> contains the CSS content");
         });
       });

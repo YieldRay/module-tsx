@@ -21,7 +21,9 @@ async function sideEffect() {
     }
   };
 
-  for (const s of Array.from(document.querySelectorAll(`script[type="${TYPE_ATTRIBUTE_VALUE}"]`))) {
+  for (const s of Array.from(
+    document.querySelectorAll(`script[type="${TYPE_ATTRIBUTE_VALUE}"]`),
+  )) {
     const script = s as HTMLScriptElement;
 
     if (!script.async && script.defer) {
@@ -29,9 +31,14 @@ async function sideEffect() {
         `script with type="${TYPE_ATTRIBUTE_VALUE}" does not support defer attribute. Use async or no attribute instead.`,
       );
     }
-    for (const key in ["integrity", "crossorigin"] as (keyof HTMLScriptElement)[]) {
+    for (const key in [
+      "integrity",
+      "crossorigin",
+    ] as (keyof HTMLScriptElement)[]) {
       if (script[key as keyof HTMLScriptElement]) {
-        warn(`script with type="${TYPE_ATTRIBUTE_VALUE}" does not support ${key} attribute.`);
+        warn(
+          `script with type="${TYPE_ATTRIBUTE_VALUE}" does not support ${key} attribute.`,
+        );
       }
     }
 

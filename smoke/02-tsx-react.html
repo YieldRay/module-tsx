@@ -21,7 +21,9 @@
           document.getElementById("qunit-fixture").appendChild(container);
 
           const m = new ModuleTSX({ baseUrl: location.href });
-          await m.importCode(location.href + "app", `
+          await m.importCode(
+            location.href + "app",
+            `
             import React from "react";
             import { createRoot } from "react-dom/client";
 
@@ -31,10 +33,11 @@
 
             const root = createRoot(document.querySelector("#qunit-fixture div"));
             root.render(<App />);
-          `);
+          `,
+          );
 
           // allow React to flush
-          await new Promise(r => setTimeout(r, 100));
+          await new Promise((r) => setTimeout(r, 100));
 
           assert.ok(document.getElementById("smoke-app"), "component mounted");
           assert.strictEqual(
@@ -47,10 +50,13 @@
 
         test("TSX compiles to React.createElement calls", async (assert) => {
           const m = new ModuleTSX({ baseUrl: location.href });
-          const { el } = await m.importCode(location.href + "elem", `
+          const { el } = await m.importCode(
+            location.href + "elem",
+            `
             import React from "react";
             export const el = <p className="test">hi</p>;
-          `);
+          `,
+          );
           assert.strictEqual(el.type, "p");
           assert.strictEqual(el.props.className, "test");
           assert.strictEqual(el.props.children, "hi");

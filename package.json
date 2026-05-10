@@ -7,16 +7,15 @@
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "browser": "dist/index.mjs",
   "scripts": {
     "build": "tsdown",
-    "test": "node --experimental-strip-types --test 'src/*.test.ts'"
+    "test": "node --test 'src/*.test.ts'"
   },
   "dependencies": {
     "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "@types/node": "^24.12.2",
+    "@types/node": "^24.12.3",
     "esbuild": "^0.28.0",
     "tsdown": "^0.22.0"
   },
@@ -32,5 +31,6 @@
   "homepage": "https://github.com/YieldRay/module-tsx#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
-  }
+  },
+  "packageManager": "pnpm@11.0.9"
 }

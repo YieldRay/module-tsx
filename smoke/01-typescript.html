@@ -21,35 +21,47 @@
         });
 
         test("strips type annotations and exports values", async (assert) => {
-          const { answer } = await m.importCode(location.href, `
+          const { answer } = await m.importCode(
+            location.href,
+            `
             const answer: number = 42;
             export { answer };
-          `);
+          `,
+          );
           assert.strictEqual(answer, 42);
         });
 
         test("strips interface declarations", async (assert) => {
-          const { greet } = await m.importCode(location.href + "greet", `
+          const { greet } = await m.importCode(
+            location.href + "greet",
+            `
             interface Person { name: string }
             export function greet(p: Person): string {
               return \`Hello, \${p.name}!\`;
             }
-          `);
+          `,
+          );
           assert.strictEqual(greet({ name: "world" }), "Hello, world!");
         });
 
         test("strips generic type parameters", async (assert) => {
-          const { identity } = await m.importCode(location.href + "identity", `
+          const { identity } = await m.importCode(
+            location.href + "identity",
+            `
             export function identity<T>(x: T): T { return x; }
-          `);
+          `,
+          );
           assert.strictEqual(identity(99), 99);
         });
 
         test("strips enum (const enum compiles to literal)", async (assert) => {
-          const { dir } = await m.importCode(location.href + "enum", `
+          const { dir } = await m.importCode(
+            location.href + "enum",
+            `
             const enum Dir { Up = "UP", Down = "DOWN" }
             export const dir = Dir.Up;
-          `);
+          `,
+          );
           assert.strictEqual(dir, "UP");
         });
       });

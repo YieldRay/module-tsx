@@ -35,7 +35,11 @@
           });
 
           const { result } = await m.import("https://example.com/main.ts");
-          assert.strictEqual(result, 5, "relative .ts import resolved and transpiled");
+          assert.strictEqual(
+            result,
+            5,
+            "relative .ts import resolved and transpiled",
+          );
         });
 
         test("fetches and transpiles a relative .tsx import", async (assert) => {
@@ -66,17 +70,20 @@
           // transformSourceModule deduplicates: same sourceUrl → same blob, transform fires once
           let transformCount = 0;
           const m = new ModuleTSX({ baseUrl: "https://example.com/" });
-          m.addEventListener("transform", () => { transformCount++; });
+          m.addEventListener("transform", () => {
+            transformCount++;
+          });
 
           const code = `export const x = 1;`;
           const url = "https://example.com/shared.ts";
 
-          await Promise.all([
-            m.importCode(url, code),
-            m.importCode(url, code),
-          ]);
+          await Promise.all([m.importCode(url, code), m.importCode(url, code)]);
 
-          assert.strictEqual(transformCount, 1, "transform runs only once for concurrent importCode calls");
+          assert.strictEqual(
+            transformCount,
+            1,
+            "transform runs only once for concurrent importCode calls",
+          );
         });
       });
     </script>

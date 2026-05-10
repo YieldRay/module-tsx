@@ -62,13 +62,22 @@ const react = await m.import("react");
 const app = await m.import("./app.tsx");
 
 // Import from an in-memory string
-const { x } = await m.importCode(document.location.href, `export const x: number = 1`);
+const { x } = await m.importCode(
+  document.location.href,
+  `export const x: number = 1`,
+);
 
 // Events
 m.addEventListener("import", (e) => console.log("loading", e.detail.id));
-m.addEventListener("import:error", (e) => console.error("failed", e.detail.id, e.detail.error));
-m.addEventListener("transform", (e) => console.log("compiling", e.detail.sourceUrl));
-m.addEventListener("transform:error", (e) => console.error("compile error", e.detail.sourceUrl, e.detail.error));
+m.addEventListener("import:error", (e) =>
+  console.error("failed", e.detail.id, e.detail.error),
+);
+m.addEventListener("transform", (e) =>
+  console.log("compiling", e.detail.sourceUrl),
+);
+m.addEventListener("transform:error", (e) =>
+  console.error("compile error", e.detail.sourceUrl, e.detail.error),
+);
 ```
 
 ## Use with AI
@@ -88,7 +97,10 @@ npx skills add yieldray/module-tsx
 <script type="module" src="https://esm.sh/module-tsx"></script>
 
 <!-- ESM (self-contained, no external dependencies) -->
-<script type="module" src="https://raw.esm.sh/module-tsx/dist/index.mjs"></script>
+<script
+  type="module"
+  src="https://raw.esm.sh/module-tsx/dist/index.mjs"
+></script>
 
 <!-- UMD (exposes window.ModuleTSX) -->
 <script src="https://raw.esm.sh/module-tsx/dist/index.umd.js"></script>

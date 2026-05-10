@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { ModuleTSX } from "./module-tsx.ts";
 import { ImportMap } from "./importmap.ts";
 
-
 // URL.createObjectURL returns blob: URLs which Node's ESM loader doesn't support.
 // patchBlobToDataUrl() replaces it with a registry that stores blob content keyed
 // by a fake blob: key, letting tests inspect transformed output.
@@ -74,7 +73,10 @@ describe("ModuleTSX constructor", () => {
       fetch: makeFetch({}),
       resolveBareSpecifier: "https://cdn.jsdelivr.net/npm/",
     });
-    assert.equal(m.resolveBareSpecifier("react"), "https://cdn.jsdelivr.net/npm/react");
+    assert.equal(
+      m.resolveBareSpecifier("react"),
+      "https://cdn.jsdelivr.net/npm/react",
+    );
   });
 
   it("uses function resolveBareSpecifier", () => {
@@ -91,11 +93,15 @@ describe("ModuleTSX events", () => {
   it("emits 'import' event when import() is called", async () => {
     const m = new ModuleTSX({
       baseUrl: BASE,
-      fetch: async () => { throw new Error("network error"); },
+      fetch: async () => {
+        throw new Error("network error");
+      },
     });
 
     const events: string[] = [];
-    m.addEventListener("import", (e) => events.push((e as CustomEvent).detail.id));
+    m.addEventListener("import", (e) =>
+      events.push((e as CustomEvent).detail.id),
+    );
     m.addEventListener("import:error", () => {}); // suppress unhandled rejection
 
     await m.import("react").catch(() => {});
@@ -105,11 +111,15 @@ describe("ModuleTSX events", () => {
   it("emits 'import:error' event when fetch fails", async () => {
     const m = new ModuleTSX({
       baseUrl: BASE,
-      fetch: async () => { throw new Error("network error"); },
+      fetch: async () => {
+        throw new Error("network error");
+      },
     });
 
     let errorDetail: any;
-    m.addEventListener("import:error", (e) => { errorDetail = (e as CustomEvent).detail; });
+    m.addEventListener("import:error", (e) => {
+      errorDetail = (e as CustomEvent).detail;
+    });
 
     await m.import("react").catch(() => {});
     assert.ok(errorDetail);
@@ -124,9 +134,13 @@ describe("ModuleTSX events", () => {
       baseUrl: BASE,
       fetch: makeFetch({}),
     });
-    m.addEventListener("transform", (e) => events.push((e as CustomEvent).detail.sourceUrl));
+    m.addEventListener("transform", (e) =>
+      events.push((e as CustomEvent).detail.sourceUrl),
+    );
 
-    await m.importCode("https://example.com/app.ts", `export const x = 1;`).catch(() => {});
+    await m
+      .importCode("https://example.com/app.ts", `export const x = 1;`)
+      .catch(() => {});
     assert.ok(events.includes("https://example.com/app.ts"));
   });
 });
@@ -150,7 +164,9 @@ describe("ModuleTSX specifier resolution via fetch tracking", () => {
     const fetched: string[] = [];
     const m = new ModuleTSX({
       baseUrl: BASE,
-      importMap: parseMap({ imports: { react: "https://cdn.example.com/react.js" } }),
+      importMap: parseMap({
+        imports: { react: "https://cdn.example.com/react.js" },
+      }),
       fetch: async (url) => {
         fetched.push(url);
         throw new Error("stop");
@@ -158,8 +174,14 @@ describe("ModuleTSX specifier resolution via fetch tracking", () => {
     });
 
     await m.import("react").catch(() => {});
-    assert.ok(fetched.includes("https://cdn.example.com/react.js"), `fetched: ${fetched}`);
-    assert.ok(!fetched.some((u) => u.includes("esm.sh")), `should not hit esm.sh`);
+    assert.ok(
+      fetched.includes("https://cdn.example.com/react.js"),
+      `fetched: ${fetched}`,
+    );
+    assert.ok(
+      !fetched.some((u) => u.includes("esm.sh")),
+      `should not hit esm.sh`,
+    );
   });
 
   it("resolves relative specifier against baseUrl", async () => {
@@ -173,7 +195,10 @@ describe("ModuleTSX specifier resolution via fetch tracking", () => {
     });
 
     await m.import("./utils.ts").catch(() => {});
-    assert.ok(fetched.includes("https://example.com/app/utils.ts"), `fetched: ${fetched}`);
+    assert.ok(
+      fetched.includes("https://example.com/app/utils.ts"),
+      `fetched: ${fetched}`,
+    );
   });
 
   it("uses custom resolveBareSpecifier string prefix", async () => {
@@ -188,7 +213,10 @@ describe("ModuleTSX specifier resolution via fetch tracking", () => {
     });
 
     await m.import("lodash").catch(() => {});
-    assert.ok(fetched.includes("https://jspm.dev/lodash"), `fetched: ${fetched}`);
+    assert.ok(
+      fetched.includes("https://jspm.dev/lodash"),
+      `fetched: ${fetched}`,
+    );
   });
 
   it("uses custom resolveBareSpecifier function", async () => {
@@ -203,7 +231,10 @@ describe("ModuleTSX specifier resolution via fetch tracking", () => {
     });
 
     await m.import("vue").catch(() => {});
-    assert.ok(fetched.includes("https://my-cdn.io/vue@latest"), `fetched: ${fetched}`);
+    assert.ok(
+      fetched.includes("https://my-cdn.io/vue@latest"),
+      `fetched: ${fetched}`,
+    );
   });
 });
 
@@ -216,7 +247,12 @@ describe("ModuleTSX importCode end-to-end", () => {
       fetch: makeFetch({}),
     });
 
-    await m.importCode("https://example.com/app.ts", `export const answer: number = 42;`).catch(() => {});
+    await m
+      .importCode(
+        "https://example.com/app.ts",
+        `export const answer: number = 42;`,
+      )
+      .catch(() => {});
 
     const [key] = pending.keys();
     assert.ok(key, "createObjectURL should have been called");
@@ -230,11 +266,18 @@ describe("ModuleTSX importCode end-to-end", () => {
 
     const m = new ModuleTSX({
       baseUrl: BASE,
-      importMap: parseMap({ imports: { react: "https://cdn.example.com/react.js" } }),
+      importMap: parseMap({
+        imports: { react: "https://cdn.example.com/react.js" },
+      }),
       fetch: makeFetch({}),
     });
 
-    await m.importCode("https://example.com/app.tsx", `import React from "react";\nconsole.log(React);`).catch(() => {});
+    await m
+      .importCode(
+        "https://example.com/app.tsx",
+        `import React from "react";\nconsole.log(React);`,
+      )
+      .catch(() => {});
 
     const [key] = pending.keys();
     const text = await pending.get(key)!;
@@ -250,7 +293,9 @@ describe("ModuleTSX importCode end-to-end", () => {
       fetch: makeFetch({}),
     });
 
-    await m.importCode("https://example.com/app.tsx", `const el = <div />;`).catch(() => {});
+    await m
+      .importCode("https://example.com/app.tsx", `const el = <div />;`)
+      .catch(() => {});
 
     const [key] = pending.keys();
     const text = await pending.get(key)!;
@@ -274,14 +319,25 @@ describe("ModuleTSX importCode end-to-end", () => {
       },
     });
 
-    await m.importCode("https://example.com/app.ts", files["https://example.com/app.ts"]).catch(() => {});
+    await m
+      .importCode(
+        "https://example.com/app.ts",
+        files["https://example.com/app.ts"],
+      )
+      .catch(() => {});
 
-    assert.ok(fetched.includes("https://example.com/msg.ts"), `fetched: ${fetched}`);
+    assert.ok(
+      fetched.includes("https://example.com/msg.ts"),
+      `fetched: ${fetched}`,
+    );
 
     const texts = await Promise.all([...pending.values()]);
     const appText = texts.find((t) => t.includes("msg"));
     assert.ok(appText, "app blob should reference msg");
-    assert.ok(!appText.includes('"./msg.ts"'), `should rewrite relative import, got: ${appText}`);
+    assert.ok(
+      !appText.includes('"./msg.ts"'),
+      `should rewrite relative import, got: ${appText}`,
+    );
   });
 
   it("deduplicates concurrent importCode calls for the same URL", async () => {
@@ -293,7 +349,9 @@ describe("ModuleTSX importCode end-to-end", () => {
       fetch: makeFetch({}),
     });
 
-    m.addEventListener("transform", () => { transformCount++; });
+    m.addEventListener("transform", () => {
+      transformCount++;
+    });
 
     const code = `export const x = 1;`;
     const url = "https://example.com/app.ts";
@@ -303,6 +361,10 @@ describe("ModuleTSX importCode end-to-end", () => {
       m.importCode(url, code),
     ]);
 
-    assert.equal(transformCount, 1, `transform fired ${transformCount} times, expected 1`);
+    assert.equal(
+      transformCount,
+      1,
+      `transform fired ${transformCount} times, expected 1`,
+    );
   });
 });

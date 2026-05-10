@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { TopAppBar, IconButton, NavigationDrawer, NavigationDrawerItem, Divider } from "soda-material";
+import {
+  TopAppBar,
+  IconButton,
+  NavigationDrawer,
+  NavigationDrawerItem,
+  Divider,
+} from "soda-material";
 import { useWindowSizeType } from "soda-material/dist/hooks/use-media-query";
 import { mdiMenu, mdiGithub } from "@mdi/js";
 import Icon from "./Icon.tsx";
@@ -12,7 +18,12 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
-export default function Layout({ navSections, currentHash, onNavigate, children }: LayoutProps) {
+export default function Layout({
+  navSections,
+  currentHash,
+  onNavigate,
+  children,
+}: LayoutProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const sizeType = useWindowSizeType();
   const isExpanded = sizeType === "expanded";
@@ -52,22 +63,25 @@ export default function Layout({ navSections, currentHash, onNavigate, children 
         <TopAppBar
           leadingNavigationIcon={
             !isExpanded ? (
-              <IconButton path={mdiMenu} onClick={() => setDrawerOpen((v) => !v)} />
+              <IconButton
+                path={mdiMenu}
+                onClick={() => setDrawerOpen((v) => !v)}
+              />
             ) : undefined
           }
           trailingIcon={
             <IconButton
               path={mdiGithub}
-              onClick={() => window.open("https://github.com/YieldRay/module-tsx", "_blank")}
+              onClick={() =>
+                window.open("https://github.com/YieldRay/module-tsx", "_blank")
+              }
             />
           }
         >
           module-tsx
         </TopAppBar>
         <main className="sd-scrollbar flex-1 overflow-y-auto">
-          <div className="max-w-3xl mx-auto px-6 pt-8 pb-16">
-            {children}
-          </div>
+          <div className="max-w-3xl mx-auto px-6 pt-8 pb-16">{children}</div>
         </main>
       </div>
     </div>

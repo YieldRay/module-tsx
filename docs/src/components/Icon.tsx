@@ -1,7 +1,10 @@
 import { forwardRef } from "react";
 import type { CSSProperties, SVGProps } from "react";
 
-export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "path" | "color"> {
+export interface IconProps extends Omit<
+  SVGProps<SVGSVGElement>,
+  "path" | "color"
+> {
   path: string;
   size?: number | string | null;
   color?: string | null;
@@ -16,7 +19,13 @@ const Icon = forwardRef<SVGSVGElement, IconProps>(
       computedStyle.height = dimension;
     }
     return (
-      <svg ref={ref} viewBox="0 0 24 24" style={computedStyle} role="presentation" {...rest}>
+      <svg
+        ref={ref}
+        viewBox="0 0 24 24"
+        style={computedStyle}
+        role="presentation"
+        {...rest}
+      >
         <path d={path} style={{ fill: color ?? "currentColor" }} />
       </svg>
     );

@@ -10,7 +10,11 @@ function parse(json: object): ImportMap {
   return ImportMap.parse(JSON.stringify(json), BASE);
 }
 
-function resolve(specifier: string, map: ImportMap, base: string | URL = BASE): string | undefined {
+function resolve(
+  specifier: string,
+  map: ImportMap,
+  base: string | URL = BASE,
+): string | undefined {
   return ImportMap.resolve(specifier, map, base)?.url;
 }
 
@@ -28,7 +32,9 @@ describe("resolveFromImportMap", () => {
   it("resolves from matching scope over global imports", () => {
     const map = parse({
       imports: { react: "https://esm.sh/react" },
-      scopes: { "https://example.com/app/": { react: "https://esm.sh/react@18" } },
+      scopes: {
+        "https://example.com/app/": { react: "https://esm.sh/react@18" },
+      },
     });
     assert.equal(
       resolve("react", map, "https://example.com/app/main.js"),
@@ -39,7 +45,9 @@ describe("resolveFromImportMap", () => {
   it("falls back to global imports when no scope matches", () => {
     const map = parse({
       imports: { react: "https://esm.sh/react" },
-      scopes: { "https://example.com/other/": { react: "https://esm.sh/react@17" } },
+      scopes: {
+        "https://example.com/other/": { react: "https://esm.sh/react@17" },
+      },
     });
     assert.equal(
       resolve("react", map, "https://example.com/app/main.js"),
@@ -73,7 +81,11 @@ describe("resolveFromImportMap", () => {
   });
 
   it("throws TypeError for null (blocked) entry on exact match", () => {
-    const map: ImportMap = { imports: new Map([["react", null]]), scopes: new Map(), integrity: new Map() };
+    const map: ImportMap = {
+      imports: new Map([["react", null]]),
+      scopes: new Map(),
+      integrity: new Map(),
+    };
     assert.throws(
       () => resolve("react", map),
       (e: unknown) => e instanceof TypeError && /blocked/.test(e.message),
@@ -91,7 +103,9 @@ describe("resolveFromImportMap", () => {
 
   it("resolves URL-like specifier remapped via import map", () => {
     const map = parse({
-      imports: { "https://cdn.example.com/vue.js": "https://local.example.com/vue.js" },
+      imports: {
+        "https://cdn.example.com/vue.js": "https://local.example.com/vue.js",
+      },
     });
     assert.equal(
       resolve("https://cdn.example.com/vue.js", map),
@@ -101,31 +115,52 @@ describe("resolveFromImportMap", () => {
 
   it("returns record with serializedBaseURL and normalizedSpecifier", () => {
     const map = parse({ imports: { react: "https://esm.sh/react" } });
-    const result = ImportMap.resolve("react", map, "https://example.com/app/main.js");
+    const result = ImportMap.resolve(
+      "react",
+      map,
+      "https://example.com/app/main.js",
+    );
     assert.ok(result != null);
-    assert.equal(result!.record.serializedBaseURL, "https://example.com/app/main.js");
+    assert.equal(
+      result!.record.serializedBaseURL,
+      "https://example.com/app/main.js",
+    );
     assert.equal(result!.record.specifier, "react");
     assert.equal(result!.record.specifierAsURL, null);
   });
 
   it("returns record with specifierAsURL for URL-like specifiers", () => {
     const map = parse({
-      imports: { "https://cdn.example.com/vue.js": "https://local.example.com/vue.js" },
+      imports: {
+        "https://cdn.example.com/vue.js": "https://local.example.com/vue.js",
+      },
     });
-    const result = ImportMap.resolve("https://cdn.example.com/vue.js", map, BASE);
+    const result = ImportMap.resolve(
+      "https://cdn.example.com/vue.js",
+      map,
+      BASE,
+    );
     assert.ok(result != null);
     assert.ok(result!.record.specifierAsURL instanceof URL);
-    assert.equal(result!.record.specifierAsURL!.href, "https://cdn.example.com/vue.js");
+    assert.equal(
+      result!.record.specifierAsURL!.href,
+      "https://cdn.example.com/vue.js",
+    );
   });
 });
 
 describe("parseImportMapString", () => {
   it("normalizes relative specifier keys against baseURL", () => {
     const map = ImportMap.parse(
-      JSON.stringify({ imports: { "/app/helper": "./node_modules/helper/index.mjs" } }),
+      JSON.stringify({
+        imports: { "/app/helper": "./node_modules/helper/index.mjs" },
+      }),
       new URL("https://example.com/base/page.html"),
     );
-    assert.ok(map.imports.has("https://example.com/app/helper"), "key should be normalized to absolute URL");
+    assert.ok(
+      map.imports.has("https://example.com/app/helper"),
+      "key should be normalized to absolute URL",
+    );
     assert.equal(
       map.imports.get("https://example.com/app/helper")?.href,
       "https://example.com/base/node_modules/helper/index.mjs",
@@ -147,13 +182,21 @@ describe("parseImportMapString", () => {
   });
 
   it("throws TypeError for non-object imports value", () => {
-    assert.throws(() => ImportMap.parse(JSON.stringify({ imports: [] }), BASE), TypeError);
+    assert.throws(
+      () => ImportMap.parse(JSON.stringify({ imports: [] }), BASE),
+      TypeError,
+    );
   });
 
   it("sorts specifier keys in descending order", () => {
-    const map = parse({ imports: { "a/": "https://x.com/a/", "a/b/": "https://x.com/ab/" } });
+    const map = parse({
+      imports: { "a/": "https://x.com/a/", "a/b/": "https://x.com/ab/" },
+    });
     const keys = [...map.imports.keys()];
-    assert.ok(keys.indexOf("a/b/") < keys.indexOf("a/"), "more specific key should come first");
+    assert.ok(
+      keys.indexOf("a/b/") < keys.indexOf("a/"),
+      "more specific key should come first",
+    );
   });
 
   it("parses integrity field", () => {
@@ -175,7 +218,9 @@ describe("mergeExistingAndNewImportMaps", () => {
 
   it("existing rules win on conflict (first-wins)", () => {
     const old = parse({ imports: { "/app/helper": "./helper/index.mjs" } });
-    const newMap = parse({ imports: { "/app/helper": "./main/helper/index.mjs" } });
+    const newMap = parse({
+      imports: { "/app/helper": "./main/helper/index.mjs" },
+    });
     ImportMap.merge(old, newMap, []);
     assert.equal(
       old.imports.get("https://example.com/app/helper")?.href,
@@ -185,9 +230,18 @@ describe("mergeExistingAndNewImportMaps", () => {
 
   it("drops new import rules that match an already-resolved specifier", () => {
     const old = parse({ imports: { lodash: "https://esm.sh/lodash" } });
-    const newMap = parse({ imports: { "/app/helper": "./helper/index.mjs", lodash: "https://cdn.example/lodash" } });
+    const newMap = parse({
+      imports: {
+        "/app/helper": "./helper/index.mjs",
+        lodash: "https://cdn.example/lodash",
+      },
+    });
     const resolved: SpecifierResolutionRecord[] = [
-      { serializedBaseURL: "https://example.com/", specifier: "https://example.com/app/helper", specifierAsURL: new URL("https://example.com/app/helper") },
+      {
+        serializedBaseURL: "https://example.com/",
+        specifier: "https://example.com/app/helper",
+        specifierAsURL: new URL("https://example.com/app/helper"),
+      },
     ];
     ImportMap.merge(old, newMap, resolved);
     // lodash is already in old, so new lodash is dropped; /app/helper matches resolved → also dropped
@@ -198,7 +252,9 @@ describe("mergeExistingAndNewImportMaps", () => {
   it("drops new scope rules that match an already-resolved module from that scope", () => {
     const old = new ImportMap();
     const newMap = parse({
-      scopes: { "https://example.com/app/": { "/app/helper": "./helper/index.mjs" } },
+      scopes: {
+        "https://example.com/app/": { "/app/helper": "./helper/index.mjs" },
+      },
       imports: { lodash: "https://esm.sh/lodash" },
     });
     const resolved: SpecifierResolutionRecord[] = [
@@ -210,13 +266,22 @@ describe("mergeExistingAndNewImportMaps", () => {
     ];
     ImportMap.merge(old, newMap, resolved);
     const scope = old.scopes.get("https://example.com/app/");
-    assert.ok(!scope?.has("https://example.com/app/helper"), "scoped rule should be dropped");
+    assert.ok(
+      !scope?.has("https://example.com/app/helper"),
+      "scoped rule should be dropped",
+    );
     assert.equal(old.imports.get("lodash")?.href, "https://esm.sh/lodash");
   });
 
   it("merges scopes, combining existing and new when scope prefix already exists", () => {
-    const old = parse({ scopes: { "https://example.com/app/": { react: "https://esm.sh/react@17" } } });
-    const newMap = parse({ scopes: { "https://example.com/app/": { vue: "https://esm.sh/vue" } } });
+    const old = parse({
+      scopes: {
+        "https://example.com/app/": { react: "https://esm.sh/react@17" },
+      },
+    });
+    const newMap = parse({
+      scopes: { "https://example.com/app/": { vue: "https://esm.sh/vue" } },
+    });
     ImportMap.merge(old, newMap, []);
     const scope = old.scopes.get("https://example.com/app/");
     assert.ok(scope?.has("react"));
@@ -224,7 +289,9 @@ describe("mergeExistingAndNewImportMaps", () => {
   });
 
   it("merges integrity (first-wins)", () => {
-    const old = parse({ integrity: { "https://example.com/a.js": "sha384-old" } });
+    const old = parse({
+      integrity: { "https://example.com/a.js": "sha384-old" },
+    });
     const newMap = parse({
       integrity: {
         "https://example.com/a.js": "sha384-new",

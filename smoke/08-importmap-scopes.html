@@ -16,50 +16,99 @@
 
       QUnit.module("Import map scopes", () => {
         test("scope takes priority over global imports for matching referrer", (assert) => {
-          const map = ImportMap.of({
-            imports: { react: "https://esm.sh/react" },
-            scopes: {
-              "https://example.com/app/": { react: "https://esm.sh/react@18" },
+          const map = ImportMap.of(
+            {
+              imports: { react: "https://esm.sh/react" },
+              scopes: {
+                "https://example.com/app/": {
+                  react: "https://esm.sh/react@18",
+                },
+              },
             },
-          }, "https://example.com/");
+            "https://example.com/",
+          );
 
           // Module under /app/ — should use scoped mapping
-          const inScope = ImportMap.resolve("react", map, "https://example.com/app/main.ts");
-          assert.strictEqual(inScope?.url, "https://esm.sh/react@18", "scoped mapping used for referrer under /app/");
+          const inScope = ImportMap.resolve(
+            "react",
+            map,
+            "https://example.com/app/main.ts",
+          );
+          assert.strictEqual(
+            inScope?.url,
+            "https://esm.sh/react@18",
+            "scoped mapping used for referrer under /app/",
+          );
 
           // Module outside /app/ — should use global mapping
-          const outScope = ImportMap.resolve("react", map, "https://example.com/other/main.ts");
-          assert.strictEqual(outScope?.url, "https://esm.sh/react", "global mapping used for referrer outside scope");
+          const outScope = ImportMap.resolve(
+            "react",
+            map,
+            "https://example.com/other/main.ts",
+          );
+          assert.strictEqual(
+            outScope?.url,
+            "https://esm.sh/react",
+            "global mapping used for referrer outside scope",
+          );
         });
 
         test("more specific scope wins over less specific scope", (assert) => {
-          const map = ImportMap.of({
-            scopes: {
-              "https://example.com/": { react: "https://esm.sh/react@17" },
-              "https://example.com/app/": { react: "https://esm.sh/react@18" },
+          const map = ImportMap.of(
+            {
+              scopes: {
+                "https://example.com/": { react: "https://esm.sh/react@17" },
+                "https://example.com/app/": {
+                  react: "https://esm.sh/react@18",
+                },
+              },
             },
-          }, "https://example.com/");
+            "https://example.com/",
+          );
 
-          const result = ImportMap.resolve("react", map, "https://example.com/app/main.ts");
-          assert.strictEqual(result?.url, "https://esm.sh/react@18", "more specific scope /app/ wins");
+          const result = ImportMap.resolve(
+            "react",
+            map,
+            "https://example.com/app/main.ts",
+          );
+          assert.strictEqual(
+            result?.url,
+            "https://esm.sh/react@18",
+            "more specific scope /app/ wins",
+          );
 
-          const outer = ImportMap.resolve("react", map, "https://example.com/other/main.ts");
-          assert.strictEqual(outer?.url, "https://esm.sh/react@17", "less specific scope / used outside /app/");
+          const outer = ImportMap.resolve(
+            "react",
+            map,
+            "https://example.com/other/main.ts",
+          );
+          assert.strictEqual(
+            outer?.url,
+            "https://esm.sh/react@17",
+            "less specific scope / used outside /app/",
+          );
         });
 
         test("scope rewrites bare specifiers in transformed blob code", async (assert) => {
-          const map = ImportMap.of({
-            imports: { react: "https://esm.sh/react" },
-            scopes: {
-              "https://example.com/app/": { react: "https://esm.sh/react@18" },
+          const map = ImportMap.of(
+            {
+              imports: { react: "https://esm.sh/react" },
+              scopes: {
+                "https://example.com/app/": {
+                  react: "https://esm.sh/react@18",
+                },
+              },
             },
-          }, "https://example.com/");
+            "https://example.com/",
+          );
 
           // Capture the blob content by monkey-patching createObjectURL
           const orig = URL.createObjectURL;
           let blobText = "";
           URL.createObjectURL = (blob) => {
-            blob.text().then(t => { blobText = t; });
+            blob.text().then((t) => {
+              blobText = t;
+            });
             return orig.call(URL, blob);
           };
 
@@ -68,7 +117,9 @@
             importMap: map,
             fetch: async (url) => {
               if (url === "https://example.com/app/main.ts")
-                return new Response(`import "react"; export const ok = true;`, { status: 200 });
+                return new Response(`import "react"; export const ok = true;`, {
+                  status: 200,
+                });
               throw new Error(`stop: ${url}`);
             },
           });
@@ -77,10 +128,16 @@
           URL.createObjectURL = orig;
 
           // Wait for blob.text() to resolve
-          await new Promise(r => setTimeout(r, 50));
+          await new Promise((r) => setTimeout(r, 50));
 
-          assert.ok(blobText.includes("react@18"), "transformed blob imports react@18 (scoped)");
-          assert.notOk(blobText.includes('"react"'), "bare specifier 'react' was rewritten");
+          assert.ok(
+            blobText.includes("react@18"),
+            "transformed blob imports react@18 (scoped)",
+          );
+          assert.notOk(
+            blobText.includes('"react"'),
+            "bare specifier 'react' was rewritten",
+          );
         });
       });
     </script>
