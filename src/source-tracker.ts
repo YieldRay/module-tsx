@@ -2,6 +2,7 @@ export class SourceTransformTracker<TSourceType extends string> {
   private readonly sourceMap = new Map<string, string>();
   private readonly inFlightSourceMap = new Map<string, Promise<string>>();
   private readonly blobMap = new Map<string, string>();
+  private readonly originalSourceMap = new Map<string, string>();
 
   public get(sourceType: TSourceType, sourceUrl: string): string | undefined {
     return this.sourceMap.get(this.getSourceKey(sourceType, sourceUrl));
@@ -11,9 +12,17 @@ export class SourceTransformTracker<TSourceType extends string> {
     sourceType: TSourceType,
     sourceUrl: string,
     blobUrl: string,
+    originalSource?: string,
   ): void {
     this.sourceMap.set(this.getSourceKey(sourceType, sourceUrl), blobUrl);
     this.blobMap.set(blobUrl, sourceUrl);
+    if (originalSource != null) {
+      this.originalSourceMap.set(blobUrl, originalSource);
+    }
+  }
+
+  public getOriginalSource(blobUrl: string): string | undefined {
+    return this.originalSourceMap.get(blobUrl);
   }
 
   public isInFlight(sourceType: TSourceType, sourceUrl: string): boolean {

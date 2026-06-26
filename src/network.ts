@@ -4,11 +4,19 @@ export async function fetchResponse(
   input: RequestInfo | URL,
   init?: RequestInit,
 ): Promise<Response> {
-  // default fetch behavior, the next step we may support cache
-  const res = await fetch(input, init);
+  const url = input instanceof Request ? input.url : String(input);
+  let res: Response;
+  try {
+    res = await fetch(input, init);
+  } catch (cause) {
+    throw new ModuleTSXError(
+      `Failed to fetch module ${url}: Network error`,
+      { cause },
+    );
+  }
   if (!res.ok) {
     throw new ModuleTSXError(
-      `Failed to fetch resource ${res.url}: ${res.status}`,
+      `Failed to fetch module ${url}: ${res.status} ${res.statusText}`,
     );
   }
   return res;

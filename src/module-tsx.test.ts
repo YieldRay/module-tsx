@@ -1,7 +1,7 @@
 import { describe, it, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { ModuleTSX } from "./module-tsx.ts";
-import { ImportMap } from "./importmap.ts";
+import { ImportMap } from "./import-map.ts";
 
 // URL.createObjectURL returns blob: URLs which Node's ESM loader doesn't support.
 // patchBlobToDataUrl() replaces it with a registry that stores blob content keyed

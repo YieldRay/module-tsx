@@ -1,6 +1,6 @@
 import type ts from "typescript";
 import { ModuleTSXError } from "./error.ts";
-import { ImportMap, type SpecifierResolutionRecord } from "./importmap.ts";
+import { ImportMap, type SpecifierResolutionRecord } from "./import-map.ts";
 import { cssLoader, cssModuleLoader, type Loader } from "./loader.ts";
 import { fetchResponse } from "./network.ts";
 import {
@@ -84,6 +84,16 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
     ImportMap.merge(this.importMap, newImportMap, this.resolvedModuleSet);
   }
 
+  /** Resolve a blob URL back to its original source URL. Returns undefined if not found. */
+  public getSourceUrlByBlob(blobUrl: string): string | undefined {
+    return this.sourceTracker.getSourceUrlByBlob(blobUrl);
+  }
+
+  /** Get the original source code that was compiled into a given blob URL. */
+  public getOriginalSource(blobUrl: string): string | undefined {
+    return this.sourceTracker.getOriginalSource(blobUrl);
+  }
+
   private emit<T extends keyof ModuleTSXEventMap>(
     type: T,
     detail?: ModuleTSXEventMap[T]["detail"],
@@ -156,7 +166,7 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
         (await loader(sourceUrl, sourceCode));
       const blob = new Blob([code], { type: "text/javascript" });
       const blobUrl = URL.createObjectURL(blob);
-      this.sourceTracker.set(sourceType, sourceUrl, blobUrl);
+      this.sourceTracker.set(sourceType, sourceUrl, blobUrl, sourceCode);
       return blobUrl;
     });
   }

@@ -9,6 +9,7 @@
   "browser": "dist/index.cdn.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
+    "dev": "tsdown --watch",
     "build": "tsdown",
     "test": "node --test 'src/*.test.ts'"
   },
@@ -16,9 +17,9 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "@types/node": "^24.12.3",
-    "esbuild": "^0.28.0",
-    "tsdown": "^0.22.0"
+    "@types/node": "^24.13.2",
+    "esbuild": "^0.28.1",
+    "tsdown": "^0.22.3"
   },
   "author": "YieldRay",
   "license": "MIT",
@@ -33,5 +34,5 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },
-  "packageManager": "pnpm@10.33.4"
+  "packageManager": "pnpm@10.34.4"
 }

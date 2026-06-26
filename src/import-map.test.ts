@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { ImportMap, type SpecifierResolutionRecord } from "./importmap.ts";
+import { ImportMap, type SpecifierResolutionRecord } from "./import-map.ts";
 
 // parseImportMaps() requires a DOM — tested via the browser demo only
 
