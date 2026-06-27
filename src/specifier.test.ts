@@ -32,11 +32,15 @@ describe("isRelativeSpecifier", () => {
   it("returns true for ./ and ../", () => {
     assert.ok(isRelativeSpecifier("./foo"));
     assert.ok(isRelativeSpecifier("../bar"));
-    assert.ok(isRelativeSpecifier(".hidden"));
   });
 
   it("returns true for absolute paths starting with /", () => {
     assert.ok(isRelativeSpecifier("/abs"));
+  });
+
+  it("returns false for dot-prefixed names without slash", () => {
+    assert.ok(!isRelativeSpecifier(".hidden"));
+    assert.ok(!isRelativeSpecifier(".tsconfig.json"));
   });
 
   it("returns false for bare specifiers and URLs", () => {

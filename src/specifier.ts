@@ -1,7 +1,7 @@
 import ts from "typescript";
 
 export function isBareSpecifier(specifier: string): boolean {
-  if (specifier.match(/^\.*\//)) return false;
+  if (isRelativeSpecifier(specifier)) return false;
 
   try {
     new URL(specifier);
@@ -13,7 +13,11 @@ export function isBareSpecifier(specifier: string): boolean {
 
 /* Helper to check if a specifier is relative, note that it includes both relative paths and absolute paths */
 export function isRelativeSpecifier(specifier: string): boolean {
-  return specifier.startsWith(".") || specifier.startsWith("/");
+  return (
+    specifier.startsWith("./") ||
+    specifier.startsWith("../") ||
+    specifier.startsWith("/")
+  );
 }
 
 export function collectSpecifiers(sourceFile: ts.SourceFile): Set<string> {
