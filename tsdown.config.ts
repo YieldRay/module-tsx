@@ -73,6 +73,18 @@ export default defineConfig([
       entryFileNames: "[name].cdn.mjs",
     },
   },
+  // index.dev.js — ESM with error overlay, unbundled, external deps rewritten to esm.sh
+  {
+    dts: false,
+    entry: { index: "./src/index.dev.ts" },
+    format: "esm",
+    platform: "browser",
+    target: ["esnext"],
+    plugins: esmShPlugin,
+    outputOptions: {
+      entryFileNames: "[name].dev.mjs",
+    },
+  },
   // index.js — ESM, unbundled (external deps)
   {
     dts: true,
@@ -100,7 +112,7 @@ export default defineConfig([
   },
   // index.umd.js — UMD, bundled + minified
   {
-    dts: false,
+    dts: true,
     entry: { index: "./src/index.ts" },
     format: "umd",
     platform: "browser",

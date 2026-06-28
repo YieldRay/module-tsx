@@ -17,7 +17,7 @@ loading module-tsx library...</pre
   </body>
   <!-- <script src="./dist/index.umd.js"></script> -->
   <script type="module">
-    import { instance, ModuleTSX } from "./dist/index.cdn.mjs"; // the ESM module
+    import { instance, ModuleTSX } from "./dist/index.dev.mjs"; // the ESM module
     // const { instance, ModuleTSX } = window.ModuleTSX; // the UMD global variable
     instance.addEventListener("*", (event) => {
       const { type, payload } = event.detail;

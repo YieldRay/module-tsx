@@ -96,6 +96,9 @@ npx skills add yieldray/module-tsx
 <!-- ESM -->
 <script type="module" src="https://esm.sh/module-tsx"></script>
 
+<!-- ESM (DEV mode) -->
+<script type="module" src="https://esm.sh/module-tsx/dev"></script>
+
 <!-- ESM (self-contained, no external dependencies) -->
 <script
   type="module"

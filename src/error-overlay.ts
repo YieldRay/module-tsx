@@ -35,6 +35,25 @@ const overlayStyle = /*css*/ `
   overflow-y: scroll;
   margin: 0;
   background: rgba(0, 0, 0, 0.66);
+  scrollbar-width: thin;
+  scrollbar-color: #444 #1a1a1a;
+}
+
+.backdrop::-webkit-scrollbar {
+  width: 8px;
+}
+
+.backdrop::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.backdrop::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+
+.backdrop::-webkit-scrollbar-thumb:hover {
+  background: #666;
 }
 
 .window {
@@ -61,31 +80,44 @@ pre {
   margin-top: 0;
   margin-bottom: 1em;
   overflow-x: scroll;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: #444 transparent;
 }
 
 pre::-webkit-scrollbar {
-  display: none;
+  height: 6px;
 }
 
-pre.frame::-webkit-scrollbar {
-  display: block;
-  height: 5px;
+pre::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-pre.frame::-webkit-scrollbar-thumb {
-  background: #999;
-  border-radius: 5px;
+pre::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 3px;
 }
 
-pre.frame {
-  scrollbar-width: thin;
+pre::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  margin-bottom: 1em;
 }
 
 .message {
   line-height: 1.3;
   font-weight: 600;
   white-space: pre-wrap;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .message-body {
@@ -156,6 +188,35 @@ code {
   color: var(--yellow);
 }
 
+.copy-btn {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-family: var(--monospace);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dim);
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.copy-btn:hover {
+  background: #333;
+  color: #fff;
+  border-color: #666;
+}
+
+.copy-btn:active {
+  background: #444;
+}
+
+.copy-btn.copied {
+  color: #50fa7b;
+  border-color: #50fa7b;
+}
+
 kbd {
   line-height: 1.5;
   font-family: ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -173,11 +234,41 @@ kbd {
 `;
 
 export function setupErrorOverlay(instance: ModuleTSX): void {
+  /** If the error originates from a module-tsx blob URL, show the overlay and return true. */
+  const handleRuntimeError = (error: Error): boolean => {
+    const blobLocation = extractBlobLocation(error.stack || "", instance);
+    if (!blobLocation) return false;
+
+    const sourceUrl = instance.getSourceUrlByBlob(blobLocation.blobUrl);
+    if (!sourceUrl) return false;
+
+    showErrorOverlay(sourceUrl, error, instance);
+    return true;
+  };
+
   instance.addEventListener("*", (event) => {
     const { type, payload } = (event as CustomEvent).detail;
     if (!type.endsWith(":error")) return;
 
     showErrorOverlay(payload.id || payload.sourceUrl, payload.error, instance);
+  });
+
+  // Catch runtime errors (e.g. from event handlers, timeouts) originating from module-tsx modules
+  window.addEventListener("error", (event) => {
+    if (event.error instanceof Error && handleRuntimeError(event.error)) {
+      event.preventDefault();
+    }
+  });
+
+  // Catch unhandled promise rejections from module-tsx modules
+  window.addEventListener("unhandledrejection", (event) => {
+    const error = event.reason instanceof Error
+      ? event.reason
+      : new Error(String(event.reason));
+
+    if (handleRuntimeError(error)) {
+      event.preventDefault();
+    }
   });
 }
 
@@ -617,7 +708,30 @@ async function showErrorOverlay(id: string, error: unknown, instance: ModuleTSX)
     innerHTML: "Click outside, press <kbd>Esc</kbd> key, or fix the code to dismiss.",
   });
 
-  window_.appendChild(messagePre);
+  // Copy button
+  const copyBtn = Object.assign(document.createElement("button"), {
+    className: "copy-btn",
+    textContent: "Copy",
+  });
+  copyBtn.addEventListener("click", () => {
+    const text = [message, id, stack].filter(Boolean).join("\n\n");
+    navigator.clipboard.writeText(text).then(() => {
+      copyBtn.textContent = "Copied!";
+      copyBtn.classList.add("copied");
+      setTimeout(() => {
+        copyBtn.textContent = "Copy";
+        copyBtn.classList.remove("copied");
+      }, 2000);
+    });
+  });
+
+  const header = Object.assign(document.createElement("div"), {
+    className: "header",
+  });
+  header.appendChild(messagePre);
+  header.appendChild(copyBtn);
+
+  window_.appendChild(header);
   window_.appendChild(filePre);
   if (codeFrameEl) {
     window_.appendChild(codeFrameEl);

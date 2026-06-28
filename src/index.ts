@@ -1,6 +1,5 @@
 import { ModuleTSX } from "./module-tsx.ts";
 import { ModuleTSXError, warn } from "./error.ts";
-import { setupErrorOverlay } from "./error-overlay.ts";
 import { ImportMap } from "./import-map.ts";
 export { ImportMap } from "./import-map.ts";
 export { ModuleTSX, ModuleTSXError };
@@ -9,8 +8,6 @@ export { ModuleTSX, ModuleTSXError };
  * The singleton global instance of ModuleTSX.
  */
 export const instance = new ModuleTSX({ importMap: ImportMap.fromDOM() });
-
-setupErrorOverlay(instance);
 
 const TYPE_ATTRIBUTE_VALUE = "module-tsx";
 async function sideEffect() {

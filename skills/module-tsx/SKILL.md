@@ -151,6 +151,21 @@ import "./style.css"; // injects a <style> tag into <head>
 import styles from "./button.module.css"; // returns { root: "abc123_root", ... }
 ```
 
+## Dev vs Production
+
+Use the **dev** build during development for a rich error overlay (runtime errors,
+failed imports, source-mapped stack traces with code frames):
+
+```html
+<script type="module" src="https://esm.sh/module-tsx/dev"></script>
+```
+
+Use the **production** build for deployment (no error overlay, smaller footprint):
+
+```html
+<script type="module" src="https://esm.sh/module-tsx"></script>
+```
+
 ## Common mistakes
 
 - **`defer` attribute**: not supported. Use `async` or no attribute.
