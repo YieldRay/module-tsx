@@ -1,4 +1,3 @@
-import React from "react";
 import { Table } from "soda-material";
 import CodeBlock from "../components/CodeBlock.tsx";
 

@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import { highlightElement } from "@speed-highlight/core/dist/index.js";
+import { useEffect, useRef, useState } from "react";
+import { highlightElement } from "@speed-highlight/core";
 import { IconButton } from "soda-material";
 import { mdiContentCopy, mdiCheck } from "@mdi/js";
 
@@ -34,7 +34,7 @@ export default function CodeBlock({
     const el = codeRef.current;
     if (!el) return;
     el.textContent = code;
-    highlightElement(el, LANG_MAP[language] ?? language, "multiline", {
+    highlightElement(el, (LANG_MAP[language] ?? language) as any, "multiline", {
       hideLineNumbers: true,
     });
   }, [code, language]);

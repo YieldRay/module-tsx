@@ -1,4 +1,4 @@
-import React, { Component, type ReactNode } from "react";
+import { Component, type ReactNode } from "react";
 
 class ErrorBoundary extends Component<
   { children: ReactNode },

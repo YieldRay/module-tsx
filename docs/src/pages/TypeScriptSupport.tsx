@@ -1,4 +1,3 @@
-import React from "react";
 import CodeBlock from "../components/CodeBlock.tsx";
 
 const BASIC_EXAMPLE = `<script type="module-tsx">

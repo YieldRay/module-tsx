@@ -1,4 +1,3 @@
-import React from "react";
 import CodeBlock from "../components/CodeBlock.tsx";
 
 const RELATIVE_IMPORT = `// main.tsx — loaded via <script type="module-tsx" src="./main.tsx">

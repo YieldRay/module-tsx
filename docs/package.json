@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@mdi/js": "^7.4.47",
+    "@speed-highlight/core": "^1.2.23",
+    "@tailwindcss/browser": "^4.3.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "soda-material": "^0.0.36"

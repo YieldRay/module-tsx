@@ -1,4 +1,3 @@
-import React from "react";
 import CodeBlock from "../components/CodeBlock.tsx";
 
 const CSS_IMPORT = `// Regular CSS — injected as a <style> tag in <head>

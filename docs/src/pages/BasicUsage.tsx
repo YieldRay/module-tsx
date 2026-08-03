@@ -1,4 +1,3 @@
-import React from "react";
 import CodeBlock from "../components/CodeBlock.tsx";
 
 const INLINE_SCRIPT = `<script type="module" src="https://esm.sh/module-tsx"></script>
