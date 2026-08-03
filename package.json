@@ -36,9 +36,9 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "@types/node": "^24.13.2",
+    "@types/node": "^26.1.2",
     "esbuild": "^0.28.1",
-    "tsdown": "^0.22.3"
+    "tsdown": "^0.22.14"
   },
   "author": "YieldRay",
   "license": "MIT",
@@ -53,5 +53,5 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },
-  "packageManager": "pnpm@10.34.4"
+  "packageManager": "pnpm@11.18.0"
 }
