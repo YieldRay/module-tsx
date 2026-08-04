@@ -63,4 +63,39 @@ describe("addReactImport", () => {
     const out = printSourceFile(addReactImport(sf));
     assert.ok(out.includes("react@18"), out);
   });
+
+  it("does not reuse a '/react' subpath of another package", () => {
+    // "@pierre/trees/react" is a subpath of @pierre/trees, not React itself.
+    // Reusing it would make the injected `import React` resolve to a module
+    // with no default export.
+    const sf = createSourceFile(
+      `import { FileTree } from "@pierre/trees/react";\nconst el = <div />;`,
+      "test.tsx",
+    );
+    const out = printSourceFile(addReactImport(sf));
+    assert.ok(
+      out.includes('import React from "react"'),
+      `should inject bare "react", got: ${out}`,
+    );
+    assert.ok(
+      !out.includes('import React from "@pierre/trees/react"'),
+      `must not reuse the subpath, got: ${out}`,
+    );
+  });
+
+  it("still injects bare react when a real react import coexists with a subpath", () => {
+    const sf = createSourceFile(
+      `import { FileTree } from "@pierre/trees/react";\nimport { useState } from "react";\nconst el = <div />;`,
+      "test.tsx",
+    );
+    const out = printSourceFile(addReactImport(sf));
+    assert.ok(
+      out.includes('import React from "react"'),
+      `should reuse bare "react", got: ${out}`,
+    );
+    assert.ok(
+      !out.includes('import React from "@pierre/trees/react"'),
+      out,
+    );
+  });
 });

@@ -4,11 +4,14 @@ type Awaitable<T> = T | Promise<T>;
  * Loader function type
  * @param sourceUrl - Full URL of the source file
  * @param sourceCode - Raw source code
+ * @param ancestors - Modules already being transformed above this one in the
+ *   current import chain, used to detect import cycles.
  * @returns Raw ESM code
  */
 export type Loader = (
   sourceUrl: string,
   sourceCode: string,
+  ancestors?: ReadonlySet<string>,
 ) => Awaitable<string>;
 
 export const cssLoader: Loader = (sourceUrl, sourceCode) => {

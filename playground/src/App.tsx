@@ -46,7 +46,7 @@ export default function App() {
 
   // Expose the VFS for debugging / automation in dev.
   useEffect(() => {
-    if (!import.meta.env.DEV) return;
+    if (!import.meta.env?.DEV) return;
     (window as unknown as { vfs?: VFS }).vfs = vfs;
   }, [vfs]);
 

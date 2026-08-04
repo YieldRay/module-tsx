@@ -56,26 +56,51 @@ export function needsReactImport(sourceFile: ts.SourceFile): boolean {
   return hasJSX && !hasReactVariable;
 }
 
+/**
+ * Whether an import specifier refers to the React package itself, so an
+ * auto-injected `import React` can reuse it.
+ *
+ * Matches the bare package (`react`, `react@18`) and CDN URLs whose path is
+ * exactly react (`https://esm.sh/react`, `https://esm.sh/react@18`).
+ *
+ * Deliberately does NOT match a `react` subpath of some other package such as
+ * `@pierre/trees/react` or `some-lib/react` — those export their own bindings,
+ * not React's, and reusing them would import the wrong module.
+ */
+export function isReactSpecifier(specifier: string): boolean {
+  // Bare package: "react" or "react@<version>"
+  if (specifier === "react" || /^react@/.test(specifier)) {
+    return true;
+  }
+
+  // Absolute URL whose last path segment is exactly react (a CDN build).
+  try {
+    const url = new URL(specifier);
+    const lastSegment = url.pathname.split("/").filter(Boolean).pop() ?? "";
+    return lastSegment === "react" || /^react@/.test(lastSegment);
+  } catch {
+    // Not a URL: a bare "<pkg>/react" subpath, which is not React.
+    return false;
+  }
+}
+
 /** Add React import statement to the top */
 export function addReactImport(sourceFile: ts.SourceFile): ts.SourceFile {
   // Find existing React import to reuse specifier
   let reactSpecifier = "react";
 
+  let found = false;
   function findReactSpecifier(node: ts.Node): void {
+    if (found) return;
     if (
       ts.isImportDeclaration(node) &&
       node.moduleSpecifier &&
       ts.isStringLiteral(node.moduleSpecifier)
     ) {
       const specifier = node.moduleSpecifier.text;
-      // Match react specifiers: "react", "react@xxx", "*/react", "*/react@xxx"
-      if (
-        specifier === "react" ||
-        /^react@/.test(specifier) ||
-        specifier.endsWith("/react") ||
-        /\/react@/.test(specifier)
-      ) {
+      if (isReactSpecifier(specifier)) {
         reactSpecifier = specifier;
+        found = true;
         return;
       }
     }

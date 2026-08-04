@@ -140,6 +140,7 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
         "esm",
         sourceUrl,
         code,
+        new Set(),
       );
       return await import(transformedUrl, options);
     } catch (error) {
@@ -148,11 +149,24 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
     }
   }
 
-  /** Transform module source code and return a blob URL with the transformed content */
+  /**
+   * Transform module source code and return a blob URL with the transformed
+   * content.
+   *
+   * `ancestors` lists the source URLs that are already being transformed above
+   * this module in the current import chain. We use it to tell two situations
+   * apart:
+   *
+   *   - A cycle: the module imports something that (directly or indirectly)
+   *     imports it back. Waiting for that import would wait forever.
+   *   - A diamond: the same module is reached through two separate paths. This
+   *     is safe to wait for; it just needs the same result twice.
+   */
   private async transformSourceModule(
     sourceType: ResourceType,
     sourceUrl: string,
     sourceCode: string,
+    ancestors: ReadonlySet<string>,
   ) {
     const cachedBlobUrl = this.sourceTracker.get(sourceType, sourceUrl);
     if (cachedBlobUrl) {
@@ -161,9 +175,12 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
 
     return this.sourceTracker.runWithDedup(sourceType, sourceUrl, async () => {
       const loader = this.getLoaderByResourceType(sourceType);
+      // Add this module to the chain so its own imports can detect a cycle
+      // that leads back here.
+      const nextAncestors = new Set(ancestors).add(sourceUrl);
       const code =
         `import.meta.url=${JSON.stringify(sourceUrl)};\n` +
-        (await loader(sourceUrl, sourceCode));
+        (await loader(sourceUrl, sourceCode, nextAncestors));
       const blob = new Blob([code], { type: "text/javascript" });
       const blobUrl = URL.createObjectURL(blob);
       this.sourceTracker.set(sourceType, sourceUrl, blobUrl, sourceCode);
@@ -189,6 +206,7 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
   private async tsxLoader(
     sourceUrl: string,
     sourceCode: string,
+    ancestors: ReadonlySet<string> = new Set(),
   ): Promise<string> {
     this.emit("transform", { sourceUrl });
 
@@ -199,6 +217,7 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
       const rewrittenSpecifiers = await this.resolveSpecifiers(
         specifiers,
         sourceUrl,
+        ancestors,
       );
 
       let workingSourceFile = sourceFile;
@@ -207,7 +226,11 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
         // "react" was injected after resolveSpecifiers ran — resolve it now so
         // the transformer rewrites it to a full URL like every other specifier
         if (!rewrittenSpecifiers.has("react")) {
-          const reactUrl = await this.resolveSpecifier("react", sourceUrl);
+          const reactUrl = await this.resolveSpecifier(
+            "react",
+            sourceUrl,
+            ancestors,
+          );
           if (reactUrl !== "react") rewrittenSpecifiers.set("react", reactUrl);
         }
       }
@@ -223,13 +246,17 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
     }
   }
 
-  private async resolveLocalUrl(fullUrl: string): Promise<string> {
+  private async resolveLocalUrl(
+    fullUrl: string,
+    ancestors: ReadonlySet<string>,
+  ): Promise<string> {
     const { pathname } = new URL(fullUrl);
     if (pathname.endsWith(".module.css")) {
       return this.transformSourceModule(
         "css-module",
         fullUrl,
         await this.fetchText(fullUrl),
+        ancestors,
       );
     }
     if (pathname.endsWith(".css")) {
@@ -237,6 +264,7 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
         "css",
         fullUrl,
         await this.fetchText(fullUrl),
+        ancestors,
       );
     }
     if (pathname.endsWith(".wasm")) {
@@ -244,22 +272,27 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
       // so we just return the original full URL
       return fullUrl;
     }
-    // If this URL is already being transformed (circular import), return the raw URL.
-    // The browser handles circular ESM natively; we just need to avoid deadlocking.
-    if (this.sourceTracker.isInFlight("esm", fullUrl)) {
+    // This module is already in our import chain, so it imports us back: a
+    // cycle. We can't wait for its transform to finish (it's waiting on ours),
+    // so return the raw URL and let the browser link the cycle itself.
+    if (ancestors.has(fullUrl)) {
       return fullUrl;
     }
-    //! ^ transformSourceModule is recursive ^
+    // Not a cycle. transformSourceModule may recurse into this module's own
+    // imports; if it's already being transformed elsewhere (a diamond), the
+    // tracker hands back the same blob URL instead of transforming twice.
     return this.transformSourceModule(
       "esm",
       fullUrl,
       await this.fetchText(fullUrl),
+      ancestors,
     );
   }
 
   private async resolveSpecifier(
     specifier: string,
     sourceUrl: string,
+    ancestors: ReadonlySet<string>,
   ): Promise<string> {
     const resolved = ImportMap.resolve(specifier, this.importMap, sourceUrl);
     if (resolved) {
@@ -271,6 +304,7 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
           "css-module",
           resolved.url,
           await this.fetchText(resolved.url),
+          ancestors,
         );
       }
       if (pathname.endsWith(".css")) {
@@ -278,6 +312,7 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
           "css",
           resolved.url,
           await this.fetchText(resolved.url),
+          ancestors,
         );
       }
       return resolved.url;
@@ -285,7 +320,7 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
 
     if (isRelativeSpecifier(specifier)) {
       // local file, we fetch and transform it, then return the blob URL
-      return this.resolveLocalUrl(new URL(specifier, sourceUrl).href);
+      return this.resolveLocalUrl(new URL(specifier, sourceUrl).href, ancestors);
     }
 
     if (specifier.startsWith("node:")) {
@@ -309,6 +344,7 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
           "css",
           url,
           await this.fetchText(url),
+          ancestors,
         );
       }
       return url;
@@ -321,11 +357,16 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
   private async resolveSpecifiers(
     specifiers: Set<string>,
     sourceUrl: string,
+    ancestors: ReadonlySet<string>,
   ): Promise<Map<string, string>> {
     const resolved = new Map<string, string>();
 
     const tasks = Array.from(specifiers).map(async (specifier) => {
-      const specifier2 = await this.resolveSpecifier(specifier, sourceUrl);
+      const specifier2 = await this.resolveSpecifier(
+        specifier,
+        sourceUrl,
+        ancestors,
+      );
       if (specifier !== specifier2) {
         resolved.set(specifier, specifier2);
       }

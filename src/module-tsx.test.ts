@@ -340,6 +340,81 @@ describe("ModuleTSX importCode end-to-end", () => {
     );
   });
 
+  it("rewrites a shared (diamond) relative import to a blob URL, not a raw URL", async () => {
+    // app.tsx imports b.tsx and c.tsx, and both of them import shared.ts.
+    // Because b.tsx and c.tsx are transformed at the same time, they both reach
+    // shared.ts while it is still being transformed. This is not a cycle, so
+    // both must end up pointing at shared.ts's blob URL. If either points at the
+    // raw .ts URL, the browser cannot run it.
+    const pending = patchBlobToDataUrl();
+
+    const files: Record<string, string> = {
+      "https://example.com/app.tsx": `import { b } from "./b.tsx";\nimport { c } from "./c.tsx";\nconsole.log(b, c);`,
+      "https://example.com/b.tsx": `import { shared } from "./shared.ts";\nexport const b = shared;`,
+      "https://example.com/c.tsx": `import { shared } from "./shared.ts";\nexport const c = shared;`,
+      "https://example.com/shared.ts": `export const shared: number = 1;`,
+    };
+
+    // A slow fetch keeps shared.ts "in flight" long enough that b.tsx and c.tsx
+    // both request it before it finishes transforming.
+    const m = new ModuleTSX({
+      baseUrl: BASE,
+      fetch: async (url) => {
+        await new Promise((r) => setTimeout(r, 5));
+        return makeFetch(files)(url);
+      },
+    });
+
+    await m
+      .importCode("https://example.com/app.tsx", files["https://example.com/app.tsx"])
+      .catch(() => {});
+
+    const texts = await Promise.all([...pending.values()]);
+
+    for (const label of ["b", "c"]) {
+      const text = texts.find((t) => t.includes(`export const ${label}`));
+      assert.ok(text, `${label}.tsx blob should exist`);
+      assert.ok(
+        !text.includes('"./shared.ts"'),
+        `${label}.tsx should rewrite ./shared.ts, got: ${text}`,
+      );
+      assert.ok(
+        !text.includes("https://example.com/shared.ts"),
+        `${label}.tsx must not reference the raw .ts URL, got: ${text}`,
+      );
+    }
+  });
+
+  it("does not deadlock on a genuine import cycle", async () => {
+    // a.ts and b.ts import each other. When b.ts asks for a.ts, a.ts is still
+    // being transformed higher up the chain, so we fall back to the raw URL and
+    // let the browser link the cycle. The point of this test is that the whole
+    // thing finishes instead of hanging.
+    const pending = patchBlobToDataUrl();
+
+    const files: Record<string, string> = {
+      "https://example.com/a.ts": `import { b } from "./b.ts";\nexport const a = 1;\nexport const usesB = () => b;`,
+      "https://example.com/b.ts": `import { a } from "./a.ts";\nexport const b = 2;\nexport const usesA = () => a;`,
+    };
+
+    const m = new ModuleTSX({ baseUrl: BASE, fetch: makeFetch(files) });
+
+    await m
+      .importCode("https://example.com/a.ts", files["https://example.com/a.ts"])
+      .catch(() => {});
+
+    // Both modules must have been transformed (i.e. no deadlock stalled either).
+    const texts = await Promise.all([...pending.values()]);
+    assert.ok(
+      texts.some((t) => t.includes("export const a")),
+      "a.ts should have been transformed",
+    );
+    assert.ok(
+      texts.some((t) => t.includes("export const b")),
+      "b.ts should have been transformed",
+    );
+  });
+
   it("deduplicates concurrent importCode calls for the same URL", async () => {
     patchBlobToDataUrl();
     let transformCount = 0;
