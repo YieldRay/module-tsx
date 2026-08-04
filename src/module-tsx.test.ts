@@ -89,6 +89,63 @@ describe("ModuleTSX constructor", () => {
   });
 });
 
+describe("ModuleTSX public API", () => {
+  it("addImportMap merges a new map into the existing one", () => {
+    const m = new ModuleTSX({
+      baseUrl: BASE,
+      importMap: parseMap({ imports: { react: "https://esm.sh/react" } }),
+      fetch: makeFetch({}),
+    });
+    m.addImportMap(parseMap({ imports: { vue: "https://esm.sh/vue" } }));
+    assert.equal(m.importMap.imports.get("react")?.href, "https://esm.sh/react");
+    assert.equal(m.importMap.imports.get("vue")?.href, "https://esm.sh/vue");
+  });
+
+  it("getSourceUrlByBlob and getOriginalSource round-trip after a transform", async () => {
+    const pending = patchBlobToDataUrl();
+    const m = new ModuleTSX({ baseUrl: BASE, fetch: makeFetch({}) });
+
+    const source = `export const answer: number = 42;`;
+    await m.importCode("https://example.com/app.ts", source).catch(() => {});
+
+    const [blobKey] = pending.keys();
+    assert.ok(blobKey);
+    assert.equal(
+      m.getSourceUrlByBlob(blobKey),
+      "https://example.com/app.ts",
+    );
+    assert.equal(m.getOriginalSource(blobKey), source);
+  });
+
+  it("getSourceUrlByBlob returns undefined for an unknown blob", () => {
+    const m = new ModuleTSX({ baseUrl: BASE, fetch: makeFetch({}) });
+    assert.equal(m.getSourceUrlByBlob("blob:unknown"), undefined);
+  });
+});
+
+describe("ModuleTSX resource resolution", () => {
+  it("leaves .wasm imports as the raw URL (browser loads them natively)", async () => {
+    const pending = patchBlobToDataUrl();
+
+    const files: Record<string, string> = {
+      "https://example.com/app.ts": `import init from "./mod.wasm";\nconsole.log(init);`,
+    };
+    const m = new ModuleTSX({ baseUrl: BASE, fetch: makeFetch(files) });
+
+    await m
+      .importCode("https://example.com/app.ts", files["https://example.com/app.ts"])
+      .catch(() => {});
+
+    const texts = await Promise.all([...pending.values()]);
+    const appText = texts.find((t) => t.includes("init"));
+    assert.ok(appText, "app blob should exist");
+    assert.ok(
+      appText.includes("https://example.com/mod.wasm"),
+      `wasm import should be the raw URL, got: ${appText}`,
+    );
+  });
+});
+
 describe("ModuleTSX events", () => {
   it("emits 'import' event when import() is called", async () => {
     const m = new ModuleTSX({

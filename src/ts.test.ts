@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { createSourceFile, printSourceFile, transform } from "./ts.ts";
+import { ModuleTSXError } from "./error.ts";
 import ts from "typescript";
 
 describe("createSourceFile", () => {
@@ -38,6 +39,16 @@ describe("printSourceFile", () => {
     const out = printSourceFile(sf);
     assert.ok(out.includes("some-lib"), out);
   });
+
+  it("wraps printer failures in a ModuleTSXError", () => {
+    // A malformed node with no real text/positions makes the printer throw.
+    const bogus = { fileName: "bad.ts", statements: undefined } as unknown as ts.SourceFile;
+    assert.throws(() => printSourceFile(bogus), (err: unknown) => {
+      assert.ok(err instanceof ModuleTSXError);
+      assert.match(err.message, /Failed to print/);
+      return true;
+    });
+  });
 });
 
 describe("transform", () => {
@@ -56,5 +67,17 @@ describe("transform", () => {
     const sf = createSourceFile(`const x = 1;`, "test.ts");
     const result = transform(sf, []);
     assert.ok(result && typeof result.fileName === "string");
+  });
+
+  it("wraps a throwing transformer in a ModuleTSXError", () => {
+    const sf = createSourceFile(`const x = 1;`, "test.ts");
+    const boom: ts.TransformerFactory<ts.SourceFile> = () => () => {
+      throw new Error("transformer boom");
+    };
+    assert.throws(() => transform(sf, [boom]), (err: unknown) => {
+      assert.ok(err instanceof ModuleTSXError);
+      assert.match(err.message, /Failed to transform/);
+      return true;
+    });
   });
 });
