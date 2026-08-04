@@ -285,6 +285,51 @@ describe("ModuleTSX importCode end-to-end", () => {
     assert.ok(!text.includes('"react"'), text);
   });
 
+  it("resolves node: specifiers to the jspm polyfill by default", async () => {
+    const pending = patchBlobToDataUrl();
+
+    const m = new ModuleTSX({ baseUrl: BASE, fetch: makeFetch({}) });
+
+    await m
+      .importCode(
+        "https://example.com/app.ts",
+        `import { readFileSync } from "node:fs";\nconsole.log(readFileSync);`,
+      )
+      .catch(() => {});
+
+    const [key] = pending.keys();
+    const text = await pending.get(key)!;
+    assert.ok(
+      text.includes("@jspm/core/nodelibs/browser/fs.js"),
+      text,
+    );
+    assert.ok(!text.includes('"node:fs"'), text);
+  });
+
+  it("lets the import map override a node: specifier before the jspm fallback", async () => {
+    const pending = patchBlobToDataUrl();
+
+    const m = new ModuleTSX({
+      baseUrl: BASE,
+      importMap: parseMap({
+        imports: { "node:fs": "https://cdn.example.com/fs-shim.js" },
+      }),
+      fetch: makeFetch({}),
+    });
+
+    await m
+      .importCode(
+        "https://example.com/app.ts",
+        `import { readFileSync } from "node:fs";\nconsole.log(readFileSync);`,
+      )
+      .catch(() => {});
+
+    const [key] = pending.keys();
+    const text = await pending.get(key)!;
+    assert.ok(text.includes("https://cdn.example.com/fs-shim.js"), text);
+    assert.ok(!text.includes("@jspm/core"), text);
+  });
+
   it("auto-injects React import when JSX is used", async () => {
     const pending = patchBlobToDataUrl();
 

@@ -323,6 +323,10 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
       return this.resolveLocalUrl(new URL(specifier, sourceUrl).href, ancestors);
     }
 
+    // Node built-ins (`node:fs`, etc.). The import map is consulted first
+    // (above), so a user can point `node:*` anywhere they like; this is only
+    // the fallback when the import map has no entry for it. We map to the jspm
+    // browser polyfills, which cover most Node core modules.
     if (specifier.startsWith("node:")) {
       return `https://raw.esm.sh/@jspm/core/nodelibs/browser/${specifier.slice(5)}.js`;
     }

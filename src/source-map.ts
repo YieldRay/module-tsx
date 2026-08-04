@@ -72,39 +72,34 @@ function originalPositionFromSourceMap(
   const lines = mappings.split(";");
   if (generatedLine < 1 || generatedLine > lines.length) return undefined;
 
-  const segments = lines[generatedLine - 1];
-  if (!segments) return undefined;
+  const targetSegments = lines[generatedLine - 1];
+  if (!targetSegments) return undefined;
 
-  let genCol = 0;
+  // In a source map, the "generated column" (field 0) resets on every line,
+  // but the original line/column (fields 2 and 3) accumulate across the whole
+  // file. So we replay every segment before the target line just to carry the
+  // running original position forward.
   let origLine = 0;
   let origCol = 0;
-  let sourceIdx = 0;
-
-  // Decode all prior lines to get cumulative state
   for (let i = 0; i < generatedLine - 1; i++) {
-    const segs = lines[i];
-    if (!segs) continue;
-    for (const seg of decodeSegments(segs)) {
-      genCol = seg[0]; // resets per line in relative sense but we track state
+    for (const seg of decodeSegments(lines[i] ?? "")) {
       if (seg.length >= 4) {
-        sourceIdx += seg[1];
         origLine += seg[2];
         origCol += seg[3];
       }
     }
-    genCol = 0; // genCol resets per line
   }
 
-  // Now decode the target line
-  genCol = 0;
+  // Walk the target line, keeping the mapping whose generated column is the
+  // last one at or before the column we're looking for.
+  let genCol = 0;
   let bestOrigLine = origLine;
   let bestOrigCol = origCol;
   let found = false;
 
-  for (const seg of decodeSegments(segments)) {
+  for (const seg of decodeSegments(targetSegments)) {
     genCol += seg[0];
     if (seg.length >= 4) {
-      sourceIdx += seg[1];
       origLine += seg[2];
       origCol += seg[3];
     }

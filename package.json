@@ -30,7 +30,8 @@
     "dev": "tsdown --watch",
     "build": "tsdown",
     "lint": "pnpm dlx publint",
-    "test": "node --test 'src/*.test.ts'"
+    "test": "node --test 'src/*.test.ts'",
+    "cov": "node --experimental-test-coverage --test 'src/*.test.ts'"
   },
   "dependencies": {
     "typescript": "^5.9.3"

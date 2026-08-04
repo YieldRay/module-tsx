@@ -396,10 +396,20 @@ function mergeExistingAndNewImportMaps(
     oldImportMap.integrity.set(url, integrity);
   }
 
-  // Step: drop new global import rules that would affect an already-resolved module
+  // Step: drop new global import rules that would affect an already-resolved
+  // module. A rule affects a resolved module when its key either matches the
+  // resolved specifier exactly, or is a "/"-terminated prefix of it (the same
+  // matching used for scope rules above). A bare `startsWith` would be wrong:
+  // a resolved "react" would incorrectly drop an unrelated "react-dom" rule.
   for (const record of resolvedModuleSet) {
     for (const specifierKey of [...newImportMapImports.keys()]) {
-      if (specifierKey.startsWith(record.specifier)) {
+      const affectsRecord =
+        specifierKey === record.specifier ||
+        (specifierKey.endsWith("/") &&
+          record.specifier.startsWith(specifierKey) &&
+          (record.specifierAsURL === null || isSpecialURL(record.specifierAsURL)));
+
+      if (affectsRecord) {
         warn(
           `Import map merge: ignoring global rule "${specifierKey}" — already resolved.`,
         );

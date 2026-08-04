@@ -31,29 +31,40 @@ describe("SourceTransformTracker", () => {
     assert.equal(tracker.getSourceUrlByBlob("blob:null/unknown"), undefined);
   });
 
-  it("isInFlight() is false before runWithDedup()", () => {
+  it("runWithDedup() reuses the in-flight task while it is running", async () => {
     const tracker = new SourceTransformTracker();
-    assert.ok(!tracker.isInFlight("ts", "https://example.com/a.ts"));
-  });
-
-  it("isInFlight() is true while task is running", async () => {
-    const tracker = new SourceTransformTracker();
+    let calls = 0;
     let resolve!: (v: string) => void;
     const promise = new Promise<string>((res) => {
       resolve = res;
     });
-    tracker.runWithDedup("ts", "https://example.com/a.ts", () => promise);
-    assert.ok(tracker.isInFlight("ts", "https://example.com/a.ts"));
+    const run = () => {
+      calls++;
+      return promise;
+    };
+
+    const p1 = tracker.runWithDedup("ts", "https://example.com/a.ts", run);
+    // A second call while the first is running must reuse it, not start again.
+    const p2 = tracker.runWithDedup("ts", "https://example.com/a.ts", run);
+    assert.equal(p1, p2);
+    assert.equal(calls, 1);
+
     resolve("blob:null/done");
     await promise;
   });
 
-  it("isInFlight() is false after task resolves", async () => {
+  it("runWithDedup() runs again after the previous task resolves", async () => {
     const tracker = new SourceTransformTracker();
-    await tracker.runWithDedup("ts", "https://example.com/a.ts", () =>
-      Promise.resolve("blob:null/x"),
-    );
-    assert.ok(!tracker.isInFlight("ts", "https://example.com/a.ts"));
+    let calls = 0;
+    const run = () => {
+      calls++;
+      return Promise.resolve("blob:null/x");
+    };
+
+    await tracker.runWithDedup("ts", "https://example.com/a.ts", run);
+    // Once finished, the entry is no longer in flight, so a fresh call re-runs.
+    await tracker.runWithDedup("ts", "https://example.com/a.ts", run);
+    assert.equal(calls, 2);
   });
 
   it("runWithDedup() returns same promise for concurrent calls", () => {

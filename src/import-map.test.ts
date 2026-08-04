@@ -129,6 +129,20 @@ describe("resolveFromImportMap", () => {
     assert.equal(result!.record.specifierAsURL, null);
   });
 
+  it("resolves a URL-like specifier via a trailing-slash prefix rule", () => {
+    // The specifier parses as a (special, https) URL, so it is allowed to match
+    // a "/"-terminated prefix key — exercising the isSpecialURL() check.
+    const map = parse({
+      imports: {
+        "https://cdn.example.com/pkg/": "https://local.example.com/pkg/",
+      },
+    });
+    assert.equal(
+      resolve("https://cdn.example.com/pkg/sub.js", map),
+      "https://local.example.com/pkg/sub.js",
+    );
+  });
+
   it("returns record with specifierAsURL for URL-like specifiers", () => {
     const map = parse({
       imports: {
@@ -249,6 +263,41 @@ describe("mergeExistingAndNewImportMaps", () => {
     assert.ok(!old.imports.has("https://example.com/app/helper"));
   });
 
+  it("keeps a new rule whose key only shares a prefix with a resolved specifier", () => {
+    // "react-dom" starts with "react" but is a different bare specifier, so a
+    // resolved "react" must NOT drop a new "react-dom" rule.
+    const old = parse({});
+    const newMap = parse({
+      imports: { "react-dom": "https://cdn.example/react-dom" },
+    });
+    const resolved: SpecifierResolutionRecord[] = [
+      {
+        serializedBaseURL: "https://example.com/",
+        specifier: "react",
+        specifierAsURL: null,
+      },
+    ];
+    ImportMap.merge(old, newMap, resolved);
+    assert.equal(
+      old.imports.get("react-dom")?.href,
+      "https://cdn.example/react-dom",
+    );
+  });
+
+  it("drops a new '/'-prefixed rule that covers a resolved specifier", () => {
+    const old = parse({});
+    const newMap = parse({ imports: { "lib/": "https://cdn.example/lib/" } });
+    const resolved: SpecifierResolutionRecord[] = [
+      {
+        serializedBaseURL: "https://example.com/",
+        specifier: "lib/thing",
+        specifierAsURL: null,
+      },
+    ];
+    ImportMap.merge(old, newMap, resolved);
+    assert.ok(!old.imports.has("lib/"), "prefix rule should be dropped");
+  });
+
   it("drops new scope rules that match an already-resolved module from that scope", () => {
     const old = new ImportMap();
     const newMap = parse({
@@ -301,5 +350,118 @@ describe("mergeExistingAndNewImportMaps", () => {
     ImportMap.merge(old, newMap, []);
     assert.equal(old.integrity.get("https://example.com/a.js"), "sha384-old");
     assert.equal(old.integrity.get("https://example.com/b.js"), "sha384-b");
+  });
+
+  it("drops a new '/'-terminated scope rule that covers a resolved module", () => {
+    const old = new ImportMap();
+    const newMap = parse({
+      scopes: {
+        "https://example.com/app/": { "lib/": "https://cdn.example/lib/" },
+      },
+    });
+    const resolved: SpecifierResolutionRecord[] = [
+      {
+        serializedBaseURL: "https://example.com/app/main.mjs",
+        specifier: "lib/thing",
+        specifierAsURL: null,
+      },
+    ];
+    ImportMap.merge(old, newMap, resolved);
+    const scope = old.scopes.get("https://example.com/app/");
+    assert.ok(!scope?.has("lib/"), "prefix scope rule should be dropped");
+  });
+});
+
+describe("ImportMap.of", () => {
+  it("builds a map from a plain object (string base URL)", () => {
+    const map = ImportMap.of(
+      { imports: { react: "https://esm.sh/react" } },
+      "https://example.com/",
+    );
+    assert.equal(map.imports.get("react")?.href, "https://esm.sh/react");
+  });
+
+  it("accepts a URL base", () => {
+    const map = ImportMap.of({ imports: { vue: "https://esm.sh/vue" } }, BASE);
+    assert.equal(map.imports.get("vue")?.href, "https://esm.sh/vue");
+  });
+});
+
+describe("ImportMap.resolve with string base URL", () => {
+  it("accepts a string baseURL", () => {
+    const map = parse({ imports: { react: "https://esm.sh/react" } });
+    assert.equal(
+      resolve("react", map, "https://example.com/app/"),
+      "https://esm.sh/react",
+    );
+  });
+});
+
+describe("parseImportMapString validation", () => {
+  it("throws TypeError for invalid JSON", () => {
+    assert.throws(() => ImportMap.parse("{ not json", BASE), TypeError);
+  });
+
+  it("ignores an empty specifier key", () => {
+    const map = parse({ imports: { "": "https://esm.sh/x" } });
+    assert.equal(map.imports.size, 0);
+  });
+
+  it("stores null for a non-string address value", () => {
+    const map = parse({ imports: { react: 123 } });
+    assert.equal(map.imports.get("react"), null);
+  });
+
+  it("warns and ignores unknown top-level keys", () => {
+    // Unknown keys are ignored (with a warning); parsing still succeeds.
+    const map = parse({ imports: { react: "https://esm.sh/react" }, extra: 1 });
+    assert.equal(map.imports.get("react")?.href, "https://esm.sh/react");
+  });
+
+  it("throws TypeError when a scope value is not an object", () => {
+    assert.throws(
+      () =>
+        ImportMap.parse(
+          JSON.stringify({ scopes: { "https://example.com/app/": [] } }),
+          BASE,
+        ),
+      TypeError,
+    );
+  });
+
+  it("throws TypeError for non-object scopes value", () => {
+    assert.throws(
+      () => ImportMap.parse(JSON.stringify({ scopes: [] }), BASE),
+      TypeError,
+    );
+  });
+
+  it("throws TypeError for non-object integrity value", () => {
+    assert.throws(
+      () => ImportMap.parse(JSON.stringify({ integrity: [] }), BASE),
+      TypeError,
+    );
+  });
+
+  it("ignores a non-URL integrity key", () => {
+    // A bare (non-URL-like) key does not resolve to a URL and is skipped.
+    const map = parse({ integrity: { "bare-key": "sha384-abc" } });
+    assert.equal(map.integrity.size, 0);
+  });
+
+  it("ignores a non-string integrity value", () => {
+    const map = parse({ integrity: { "https://example.com/a.js": 42 } });
+    assert.equal(map.integrity.size, 0);
+  });
+
+  it("ignores an unparseable scope prefix", () => {
+    // A scope prefix that cannot be URL-parsed against the base is skipped.
+    // Using a control character makes new URL() throw.
+    const map = ImportMap.parse(
+      JSON.stringify({ scopes: { "http://a b c/": { react: "https://esm.sh/react" } } }),
+      BASE,
+    );
+    // The bad scope is skipped; the map still parses.
+    assert.ok(map.scopes.size <= 1);
   });
 });

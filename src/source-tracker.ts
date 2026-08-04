@@ -25,10 +25,6 @@ export class SourceTransformTracker<TSourceType extends string> {
     return this.originalSourceMap.get(blobUrl);
   }
 
-  public isInFlight(sourceType: TSourceType, sourceUrl: string): boolean {
-    return this.inFlightSourceMap.has(this.getSourceKey(sourceType, sourceUrl));
-  }
-
   public getSourceUrlByBlob(blobUrl: string): string | undefined {
     return this.blobMap.get(blobUrl);
   }
