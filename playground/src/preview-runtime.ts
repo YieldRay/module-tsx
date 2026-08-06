@@ -11,6 +11,7 @@ import type { PreviewBridge } from "./preview.tsx";
 declare global {
   interface Window {
     __MODULE_TSX_PLAYGROUND__?: PreviewBridge;
+    bootPreview?: () => Promise<void>;
   }
 }
 
@@ -117,3 +118,9 @@ export async function bootPreview(): Promise<void> {
     }
   }
 }
+
+// Loaded as the iframe's own page (preview.html). The parent sets the bridge on
+// this window, then calls bootPreview on the `load` event. Self-boot covers the
+// case where the bridge was set before this module ran.
+window.bootPreview = bootPreview;
+if (window.__MODULE_TSX_PLAYGROUND__) void bootPreview();

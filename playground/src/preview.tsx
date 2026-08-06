@@ -12,9 +12,14 @@ interface PreviewProps extends PreviewBridge {
   runToken: number;
 }
 
-// Absolute URL of the runtime module that runs *inside* the iframe. Resolved
-// against this module's URL so it works in both dev and build.
-const RUNTIME_URL = new URL("./preview-runtime.ts", import.meta.url).href;
+// The standalone preview page (its own MPA entry). Document-relative so it
+// resolves under any `base`.
+const PREVIEW_URL = "preview.html";
+
+interface PreviewIframeWindow extends Window {
+  __MODULE_TSX_PLAYGROUND__?: PreviewBridge;
+  bootPreview?: () => Promise<void>;
+}
 
 export function Preview({ vfs, runToken, onEvent }: PreviewProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -23,23 +28,19 @@ export function Preview({ vfs, runToken, onEvent }: PreviewProps) {
     const iframe = iframeRef.current;
     if (!iframe) return;
 
-    const doc = iframe.contentDocument;
-    const win = iframe.contentWindow as (Window & typeof globalThis) | null;
-    if (!doc || !win) return;
+    const drive = () => {
+      const win = iframe.contentWindow as PreviewIframeWindow | null;
+      if (!win) return;
+      // Hand the bridge to the same-origin iframe, then boot in its own realm.
+      win.__MODULE_TSX_PLAYGROUND__ = { vfs, onEvent };
+      void win.bootPreview?.();
+    };
 
-    // Hand the bridge to the (same-origin) iframe before its module runs.
-    win.__MODULE_TSX_PLAYGROUND__ = { vfs, onEvent };
+    iframe.addEventListener("load", drive);
+    // Reload for a fresh realm each run; runToken busts the cache.
+    iframe.src = `${PREVIEW_URL}?run=${runToken}`;
 
-    // The iframe imports the runtime module in ITS OWN realm, so the user's
-    // code (and its `document` / `createRoot`) targets the iframe, not us.
-    doc.open();
-    doc.write(
-      `<!doctype html><html><head><meta charset="utf-8"></head><body></body>` +
-        `<script type="module">` +
-        `import(${JSON.stringify(RUNTIME_URL)}).then((m) => m.bootPreview());` +
-        `<\/script></html>`,
-    );
-    doc.close();
+    return () => iframe.removeEventListener("load", drive);
   }, [vfs, runToken, onEvent]);
 
   return (

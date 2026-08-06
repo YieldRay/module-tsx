@@ -13,6 +13,17 @@ import { addReactImport, needsReactImport } from "./react.ts";
 import { SourceTransformTracker } from "./source-tracker.ts";
 import { createSourceFile, printSourceFile, transform } from "./ts.ts";
 
+/**
+ * Dynamically import an already-resolved module URL.
+ *
+ * Kept as a standalone indirection so bundlers cannot inline an awaited URL
+ * into the `import()` argument (producing `import(await ...)`), which some
+ * downstream bundlers wrap in a non-async arrow and thereby break.
+ */
+function dynamicImport(url: string, options?: any): Promise<any> {
+  return import(url, options);
+}
+
 interface ModuleTSXConfig {
   /**
    * The base URL to resolve relative module specifiers.
@@ -142,7 +153,7 @@ export class ModuleTSX extends EventTarget implements IModuleTSX {
         code,
         new Set(),
       );
-      return await import(transformedUrl, options);
+      return await dynamicImport(transformedUrl, options);
     } catch (error) {
       this.emit("import:error", { id: sourceUrl, error });
       throw error;
