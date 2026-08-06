@@ -25,23 +25,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Install Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
           node-version: lts/*
+          registry-url: https://registry.npmjs.org
           package-manager-cache: false
 
-      - name: NPM install
-        run: npm install
+      - name: Setup pnpm
+        uses: pnpm/setup@v2
+        with:
+          install: false
 
-      - name: NPM build
-        run: |
-          npm run build
+      - name: PNPM install
+        run: pnpm install
 
-      - name: NPM build for release
+      - name: PNPM build
         run: |
-          npm pack --pack-destination dist
-          rm -rf node_modules # remove it to prevent uploading it to GitHub Pages
+          pnpm build && pnpm -r build
+
+      - name: PNPM build for release
+        run: |
+          pnpm pack --pack-destination dist
+          # remove all node_modules to prevent uploading them to GitHub Pages
+          find . -name node_modules -type d -prune -exec rm -rf {} +
 
       - name: Setup Pages
         uses: actions/configure-pages@v6

@@ -1,4 +1,6 @@
 name: Publish to npm
+# This publish workflow only build the library itself,
+# so only npm is required and sub packages are not needed.
 
 on:
   workflow_dispatch:
