@@ -47,7 +47,7 @@ export default function TypeScriptSupport() {
         React, module-tsx injects <code>import React from "react"</code>{" "}
         automatically.
       </p>
-      <CodeBlock code={BASIC_EXAMPLE} language="html" filename="index.html" />
+      <CodeBlock code={BASIC_EXAMPLE} lang="html" filename="index.html" />
 
       <h2>External .ts / .tsx Files</h2>
       <p>
@@ -55,7 +55,7 @@ export default function TypeScriptSupport() {
         <code>.tsx</code> files. Relative imports inside those files are also
         fetched, compiled, and cached as Blob URLs.
       </p>
-      <CodeBlock code={IMPORT_EXAMPLE} language="html" />
+      <CodeBlock code={IMPORT_EXAMPLE} lang="html" />
     </article>
   );
 }

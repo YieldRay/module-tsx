@@ -42,14 +42,14 @@ export default function GettingStarted() {
 
       <h2>Quick Start</h2>
       <p>Add two script tags to any HTML file:</p>
-      <CodeBlock code={QUICK_START} language="html" filename="index.html" />
+      <CodeBlock code={QUICK_START} lang="html" filename="index.html" />
 
       <h2>Serve Locally</h2>
       <p>
         Because module-tsx fetches your source files via HTTP, you need to serve
         your project from a local server (not <code>file://</code>):
       </p>
-      <CodeBlock code={SERVE_CMD} language="bash" />
+      <CodeBlock code={SERVE_CMD} lang="shell" />
 
       <h2>How It Works</h2>
       <p>

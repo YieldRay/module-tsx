@@ -44,17 +44,17 @@ export default function BasicUsage() {
         Write TypeScript and JSX directly inside a{" "}
         <code>{'<script type="module-tsx">'}</code> tag:
       </p>
-      <CodeBlock code={INLINE_SCRIPT} language="html" />
+      <CodeBlock code={INLINE_SCRIPT} lang="html" />
 
       <h2>External Files</h2>
       <p>
         Reference an external <code>.tsx</code> file using the <code>src</code>{" "}
         attribute. module-tsx will fetch, compile, and execute it:
       </p>
-      <CodeBlock code={EXTERNAL_SCRIPT} language="html" />
+      <CodeBlock code={EXTERNAL_SCRIPT} lang="html" />
       <p>The entry file can import other local files using relative paths:</p>
-      <CodeBlock code={MAIN_TSX} language="tsx" filename="src/main.tsx" />
-      <CodeBlock code={APP_TSX} language="tsx" filename="src/App.tsx" />
+      <CodeBlock code={MAIN_TSX} lang="typescript" filename="src/main.tsx" />
+      <CodeBlock code={APP_TSX} lang="typescript" filename="src/App.tsx" />
 
       <h2>The async Attribute</h2>
       <p>
@@ -62,7 +62,7 @@ export default function BasicUsage() {
         execute sequentially — each one waits for the previous to finish. Add
         the <code>async</code> attribute to execute them concurrently:
       </p>
-      <CodeBlock code={ASYNC_SCRIPT} language="html" />
+      <CodeBlock code={ASYNC_SCRIPT} lang="html" />
     </article>
   );
 }

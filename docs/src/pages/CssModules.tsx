@@ -53,8 +53,8 @@ export default function CssModules() {
         package subpaths ending in <code>.css</code> is also handled
         automatically:
       </p>
-      <CodeBlock code={CSS_IMPORT} language="tsx" />
-      <CodeBlock code={CSS_FILE} language="css" filename="styles.css" />
+      <CodeBlock code={CSS_IMPORT} lang="typescript" />
+      <CodeBlock code={CSS_FILE} lang="css" filename="styles.css" />
 
       <h2>CSS Modules</h2>
       <p>
@@ -62,10 +62,10 @@ export default function CssModules() {
         Class names are scoped by appending a short hash, preventing style
         collisions between components:
       </p>
-      <CodeBlock code={CSS_MODULE_IMPORT} language="tsx" />
+      <CodeBlock code={CSS_MODULE_IMPORT} lang="typescript" />
       <CodeBlock
         code={CSS_MODULE_FILE}
-        language="css"
+        lang="css"
         filename="Button.module.css"
       />
 

@@ -46,9 +46,9 @@ article {
 
   & code {
     font-size: 0.875em;
-    background: var(--md-sys-color-surface-container);
     padding: 0.15em 0.35em;
     border-radius: 4px;
+    background: var(--md-sys-color-surface-container);
   }
 
   & ul,
@@ -62,11 +62,30 @@ article {
   }
 }
 
-[class*="shj-lang-"] {
-  background: transparent !important;
-  box-shadow: none !important;
+[data-codice],
+[data-codice-code-content] {
   padding: 0 !important;
   margin: 0 !important;
+
+  & * {
+    background: transparent !important;
+  }
+}
+
+[data-codice] {
+  padding: 8px !important;
+  font-size: 16px !important;
+  --codice-code-padding: 0 !important;
+  --sh-class: #2d5e9d;
+  --sh-identifier: #354150;
+  --sh-sign: #8996a3;
+  --sh-property: #0550ae;
+  --sh-entity: #249a97;
+  --sh-jsxliterals: #6266d1;
+  --sh-string: #00a99a;
+  --sh-keyword: #f47067;
+  --sh-comment: #a19595;
+
   font-family:
     "SF Mono",
     /* macOS/iOS */ ui-monospace,
@@ -78,107 +97,4 @@ article {
     /* Linux (Red Hat / Fedora) */ "DejaVu Sans Mono",
     /* Linux (Ubuntu / Debian) */ Menlo,
     /* macOS (older) */ monospace !important;
-
-  & > div {
-    padding: 1rem !important;
-  }
-}
-
-[class*="shj-lang-"] {
-  white-space: pre;
-  color: #112;
-  text-shadow: none;
-  box-sizing: border-box;
-  background: #fff;
-  border-radius: 10px;
-  max-width: min(100%, 100vw);
-  margin: 10px 0;
-  padding: 30px 20px;
-  font:
-    18px/24px Consolas,
-    Courier New,
-    Monaco,
-    Andale Mono,
-    Ubuntu Mono,
-    monospace;
-  box-shadow: 0 0 5px #0001;
-}
-.shj-inline {
-  border-radius: 5px;
-  margin: 0;
-  padding: 2px 5px;
-  display: inline-block;
-}
-[class*="shj-lang-"]::selection {
-  background: #bdf5;
-}
-[class*="shj-lang-"] ::selection {
-  background: #bdf5;
-}
-[class*="shj-lang-"] > div {
-  display: flex;
-  overflow: auto;
-}
-[class*="shj-lang-"] > div :last-child {
-  outline: none;
-  flex: 1;
-}
-.shj-numbers {
-  counter-reset: line;
-  padding-left: 5px;
-}
-.shj-numbers div {
-  padding-right: 5px;
-}
-.shj-numbers div:before {
-  color: #999;
-  content: counter(line);
-  opacity: 0.5;
-  text-align: right;
-  counter-increment: line;
-  margin-right: 5px;
-  display: block;
-}
-.shj-syn-cmnt {
-  font-style: italic;
-}
-.shj-syn-err,
-.shj-syn-kwd {
-  color: #e16;
-}
-.shj-syn-num,
-.shj-syn-class {
-  color: #f60;
-}
-.shj-numbers,
-.shj-syn-cmnt {
-  color: #999;
-}
-.shj-syn-insert,
-.shj-syn-str {
-  color: #7d8;
-}
-.shj-syn-bool {
-  color: #3bf;
-}
-.shj-syn-type,
-.shj-syn-oper {
-  color: #5af;
-}
-.shj-syn-section,
-.shj-syn-func {
-  color: #84f;
-}
-.shj-syn-deleted,
-.shj-syn-var {
-  color: #f44;
-}
-.shj-oneline {
-  padding: 12px 10px;
-}
-.shj-lang-http.shj-oneline .shj-syn-kwd {
-  color: #fff;
-  background: #25f;
-  border-radius: 5px;
-  padding: 5px 7px;
 }

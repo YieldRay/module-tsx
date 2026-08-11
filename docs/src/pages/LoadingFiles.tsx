@@ -46,7 +46,7 @@ export default function LoadingFiles() {
         <code>import App from "./App.tsx"</code>, not{" "}
         <code>import App from "./App"</code>.
       </p>
-      <CodeBlock code={RELATIVE_IMPORT} language="tsx" />
+      <CodeBlock code={RELATIVE_IMPORT} lang="typescript" />
 
       <h2>npm Packages</h2>
       <p>
@@ -54,14 +54,14 @@ export default function LoadingFiles() {
         <code>https://esm.sh/</code>. Any npm package that ships an ES module
         build works:
       </p>
-      <CodeBlock code={NPM_IMPORT} language="tsx" />
+      <CodeBlock code={NPM_IMPORT} lang="typescript" />
 
       <h2>Direct URL Imports</h2>
       <p>
         Absolute <code>https://</code> URLs are imported directly without
         transformation:
       </p>
-      <CodeBlock code={CDN_IMPORT} language="tsx" />
+      <CodeBlock code={CDN_IMPORT} lang="typescript" />
 
       <h2>Node.js Built-ins</h2>
       <p>
@@ -71,14 +71,14 @@ export default function LoadingFiles() {
         </a>{" "}
         browser polyfills:
       </p>
-      <CodeBlock code={NODE_IMPORT} language="tsx" />
+      <CodeBlock code={NODE_IMPORT} lang="typescript" />
 
       <h2>npm: Prefix</h2>
       <p>
         The <code>npm:</code> prefix explicitly routes to esm.sh (same as bare
         specifiers):
       </p>
-      <CodeBlock code={NPM_PREFIX} language="tsx" />
+      <CodeBlock code={NPM_PREFIX} lang="typescript" />
 
       <h2>Custom CDN</h2>
       <p>

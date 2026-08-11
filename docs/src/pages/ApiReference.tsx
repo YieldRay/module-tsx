@@ -144,7 +144,7 @@ export default function ApiReference() {
         (used by <code>{'<script type="module-tsx">'}</code> auto-processing) is
         exported from the ESM build.
       </p>
-      <CodeBlock code={CONSTRUCTOR_EXAMPLE} language="tsx" />
+      <CodeBlock code={CONSTRUCTOR_EXAMPLE} lang="typescript" />
 
       <h3>Config Options</h3>
       <div className="sd-scrollbar overflow-x-auto my-4">
@@ -183,7 +183,7 @@ export default function ApiReference() {
         Imports a module by specifier. Handles bare specifiers, relative paths,
         and absolute URLs. Returns a promise resolving to the module's exports.
       </p>
-      <CodeBlock code={IMPORT_EXAMPLE} language="tsx" />
+      <CodeBlock code={IMPORT_EXAMPLE} lang="typescript" />
 
       <h2>
         <code>instance.importCode(sourceUrl, code)</code>
@@ -193,14 +193,14 @@ export default function ApiReference() {
         <code>sourceUrl</code> is used as the base for resolving relative
         imports within the code.
       </p>
-      <CodeBlock code={IMPORT_CODE_EXAMPLE} language="tsx" />
+      <CodeBlock code={IMPORT_CODE_EXAMPLE} lang="typescript" />
 
       <h2>Events</h2>
       <p>
         <code>ModuleTSX</code> extends <code>EventTarget</code>. You can listen
         to lifecycle events for monitoring and error handling:
       </p>
-      <CodeBlock code={EVENTS_EXAMPLE} language="tsx" />
+      <CodeBlock code={EVENTS_EXAMPLE} lang="typescript" />
 
       <div className="sd-scrollbar overflow-x-auto my-4">
         <Table style={{ width: "100%" }}>
@@ -234,10 +234,10 @@ export default function ApiReference() {
         <code>{'<script type="module">'}</code> — it registers the{" "}
         <code>DOMContentLoaded</code> listener automatically.
       </p>
-      <CodeBlock code={SINGLETON_EXAMPLE} language="html" />
+      <CodeBlock code={SINGLETON_EXAMPLE} lang="html" />
 
       <h2>Custom CDN</h2>
-      <CodeBlock code={CUSTOM_CDN_EXAMPLE} language="tsx" />
+      <CodeBlock code={CUSTOM_CDN_EXAMPLE} lang="typescript" />
     </article>
   );
 }

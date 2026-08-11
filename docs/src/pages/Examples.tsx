@@ -187,19 +187,19 @@ export default function Examples() {
       <Demo title="Live Demo">
         <Counter />
       </Demo>
-      <CodeBlock code={COUNTER_CODE} language="tsx" />
+      <CodeBlock code={COUNTER_CODE} lang="typescript" />
 
       <h2>Form</h2>
       <Demo title="Live Demo">
         <LoginForm />
       </Demo>
-      <CodeBlock code={FORM_CODE} language="tsx" />
+      <CodeBlock code={FORM_CODE} lang="typescript" />
 
       <h2>Tabs</h2>
       <Demo title="Live Demo">
         <TabsDemo />
       </Demo>
-      <CodeBlock code={TABS_CODE} language="tsx" />
+      <CodeBlock code={TABS_CODE} lang="typescript" />
 
       <h2>Progress Indicator</h2>
       <Demo title="Live Demo">
