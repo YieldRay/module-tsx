@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { EditStateManager } from "@pierre/diffs/edit";
 import { VFS } from "./vfs.ts";
 import { FileTreePane } from "./FileTreePane.tsx";
 import { EditorPane } from "./EditorPane.tsx";
@@ -82,6 +83,7 @@ export default function App() {
               onClick={() => {
                 if (window.confirm("Reset the file system to the seed content?")) {
                   vfs.reset();
+                  EditStateManager.clearAll();
                   setActivePath("App.tsx");
                   run();
                 }
